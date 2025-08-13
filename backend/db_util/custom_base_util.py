@@ -3,11 +3,13 @@ import re
 import sqlparse
 from flask import request
 from flask_sqlalchemy.query import Query
+from sqlalchemy import asc, desc
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import validates
 from sqlalchemy.sql.functions import func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.automap import AutomapBase, automap_base
+from backend import util_functions
 
 Base: AutomapBase = automap_base()
 
@@ -98,23 +100,26 @@ class BaseQuery(Query):
         )
         return sqlparse.format(str(statement), reindent=True)
 
-    # def order_by_request_args(self):
-    #     order_by = request.args.get('order_by', 'created')
-    #     reverse = request.args.get('reverse', False, type=util.string_to_bool)
-    #     asc_or_desc = db.desc if reverse else db.asc  # ascending or descending
-    #     first_entity = self.column_descriptions[0]['entity']  # e.g. Asset
-    #     property = getattr(first_entity, order_by)  # e.g. Asset.created
+    def order_by_request_args(self):
+        order_by = request.args.get('order_by', 'created')
+        reverse = request.args.get('reverse', False, type=util_functions.string_to_bool)
+        asc_or_desc = desc if reverse else asc  # ascending or descending
+        first_entity = self.column_descriptions[0]['entity']  # e.g. Asset
+        property = getattr(first_entity, order_by)  # e.g. Asset.created
 
-    #     return self.order_by(asc_or_desc(property))
+        return self.order_by(asc_or_desc(property))
 
-    # def paginate_by_request_args(self):
-    #     items_per_page = request.args.get('per_page', app.config['ITEMS_PER_PAGE'], type=int)
-    #     items_per_page = min(items_per_page, app.config['ITEMS_MAX_PER_PAGE'])
-    #     max_page = self.paginate(page=1, per_page=items_per_page).pages or 1
-    #     page = request.args.get('page', max_page, type=int)
-    #     items = self.paginate(page=page, per_page=items_per_page, error_out=False).items
+    def paginate_by_request_args(self):
+        # TODO
+        # items_per_page = request.args.get('per_page', app.config['ITEMS_PER_PAGE'], type=int)
+        # items_per_page = min(items_per_page, app.config['ITEMS_MAX_PER_PAGE'])
+        items_per_page = request.args.get('per_page', 20, type=int)
+        items_per_page = min(items_per_page, 100)
+        max_page = self.paginate(page=1, per_page=items_per_page).pages or 1
+        page = request.args.get('page', max_page, type=int)
+        items = self.paginate(page=page, per_page=items_per_page, error_out=False).items
 
-    #     return page, items
+        return page, items
 
 
 inflection = inflect.engine()  # XXX slow
@@ -126,13 +131,11 @@ def singular_camel_classname(base, tablename, table):
                    for w in tablename.title().split('_'))
 
 
+# TODO test on long underscored string
 def plural_snakecase_collection(base, local_cls, referred_cls, constraint):
-    " (classname) Review -> (collectionname) reviews"
-
-    uncamelized = re.sub(
+    ''' (classname) Review -> (collectionname) reviews '''
+    return inflection.plural(re.sub(
         r"[A-Z]",
         lambda m: "_%s" % m.group(0).lower(),
         referred_cls.__name__,
-    )[1:]
-    pluralized = inflection.plural(uncamelized)
-    return pluralized
+    )[1:])

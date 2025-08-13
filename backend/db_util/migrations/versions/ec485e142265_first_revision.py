@@ -59,6 +59,7 @@ def upgrade():
                                   
         CREATE TABLE book_images (
             uuid UUID NOT NULL PRIMARY KEY,
+            file_extension TEXT DEFAULT '',
             book_id INTEGER REFERENCES books(id) ON DELETE CASCADE NOT NULL,
             index INTEGER
         );
