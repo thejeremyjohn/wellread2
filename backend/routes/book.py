@@ -1,12 +1,10 @@
 from flask import jsonify, request
-from flask_jwt_extended import jwt_required, current_user
+from flask_jwt_extended import jwt_required
 from backend.app import app, db, Book
-
-from sqlalchemy.orm.attributes import flag_modified
-from werkzeug.datastructures import FileStorage
 
 
 @app.route('/book', methods=['POST'])
+@jwt_required()
 def book_create():
     book = Book(**request.params)
     db.session.add(book)
@@ -19,6 +17,7 @@ def book_create():
 
 
 @app.route('/books', methods=['GET'])
+@jwt_required()
 def books_get():
     books = Book.query
 
@@ -51,8 +50,9 @@ def books_get():
 
 
 @app.route('/book/<book_id>', methods=['PUT'])
+@jwt_required()
 def book_update(book_id):
-    book = Book.query.get_or_404(book_id, f"book_id={book_id}")
+    book = Book.query.get(book_id, f"book_id={book_id}")
 
     for key, value in request.params.items():
         setattr(book, key, value)
@@ -65,8 +65,9 @@ def book_update(book_id):
 
 
 @app.route('/book/<book_id>', methods=['DELETE'])
+@jwt_required()
 def book_delete(book_id):
-    book = Book.query.get_or_404(book_id, f"book_id={book_id}")
+    book = Book.query.get(book_id, f"book_id={book_id}")
 
     if book.images:
         for book_image in book.images:

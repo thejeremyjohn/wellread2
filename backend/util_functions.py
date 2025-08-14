@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
-import pytz
 import json
+import pytz
+from datetime import datetime, timedelta
+from werkzeug.datastructures import FileStorage
 
 
 def string_to_bool(string, default=None) -> bool:
@@ -46,3 +47,8 @@ def ensure_list(list_or_string, key_name, non_empty=True, item_type='string', de
     )
 
     return list_
+
+
+def assert_image(file: FileStorage):
+    assert file.content_type.startswith('image'), \
+        f"expected a file content_type like 'image/<subtype>', got '{file.content_type}'"
