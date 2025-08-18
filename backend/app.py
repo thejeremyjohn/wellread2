@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from flask import Flask
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
@@ -58,6 +59,7 @@ app.config['CLOUDFRONT_URL_GENERIC'] = 'https://d1nvc7nzk5ttp8.cloudfront.net'
 app.config['CLOUDFRONT_DISTRIBUTION_ID_GENERIC'] = 'E2CMUYDH5LNP77'
 app.config['CLOUDFRONT_SIGNER'] = mk_cloudfront_signer()
 
+cors = CORS(app, resources={r"/*": {"origins": "*"}})  # NB for local development ONLY
 db = SQLAlchemy(app,
                 query_class=BaseQuery,
                 model_class=Base,
