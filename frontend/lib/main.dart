@@ -1,5 +1,5 @@
+// ignore_for_file: avoid_print
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -138,6 +138,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     DataColumn(
                       label: Text(
+                        'cover',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
                         'title',
                         style: TextStyle(
                           color: Colors.blue,
@@ -195,6 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     return DataRow(
                       cells: [
                         DataCell(Text(book.id.toString())),
+                        DataCell(book.cover),
                         DataCell(Text(book.title)),
                         DataCell(Text(book.author)),
                       ],
@@ -218,19 +225,31 @@ class Book {
   final int id;
   final String author;
   final String title;
+  final List<dynamic> images;
 
-  const Book({required this.id, required this.author, required this.title});
+  Book({
+    required this.id,
+    required this.author,
+    required this.title,
+    required this.images,
+  });
 
   factory Book.fromJson(Map<String, dynamic> json) {
     return switch (json) {
-      {'id': int id, 'author': String author, 'title': String title} => Book(
-        id: id,
-        author: author,
-        title: title,
-      ),
+      {
+        'id': int id,
+        'author': String author,
+        'title': String title,
+        'images': List<dynamic> images,
+      } =>
+        Book(id: id, author: author, title: title, images: images),
       _ => throw const FormatException('Failed to load book.'),
     };
   }
+
+  Image get cover => images.isEmpty
+      ? Image.asset(width: 128, 'images/no-cover.png')
+      : Image.network(width: 128, images.first['url']);
 }
 
 Future<List<Book>> fetchBooks() async {
