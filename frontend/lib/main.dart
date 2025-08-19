@@ -1,7 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-import 'dart:math'; // TODO rm
 
 void main() {
   runApp(const MyApp());
@@ -30,14 +30,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // Generate a list of fiction prodcts
-  // placeholder from https://www.kindacode.com/article/flutter-datatable
-  final List<Map> _products = List.generate(30, (i) {
-    return {"id": i, "name": "Product $i", "price": Random().nextInt(200) + 1};
-  });
-
   int _currentSortColumn = 0;
   bool _isAscending = true;
+  late Future<List<Book>> futureBooks;
+
+  @override
+  void initState() {
+    super.initState();
+    futureBooks = fetchBooks();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,57 +101,148 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: SizedBox(
         width: double.infinity,
-        child: SingleChildScrollView(
-          child: DataTable(
-            sortColumnIndex: _currentSortColumn,
-            sortAscending: _isAscending,
-            headingRowColor: WidgetStateProperty.all(Colors.amber[200]),
-            columns: [
-              sortableDataColumn('ID', 'id'),
-              sortableDataColumn('Name', 'name'),
-              sortableDataColumn('Price', 'price'),
-            ],
-            rows: _products.map((item) {
-              return DataRow(
-                cells: [
-                  DataCell(Text(item['id'].toString())),
-                  DataCell(Text(item['name'])),
-                  DataCell(Text(item['price'].toString())),
-                ],
+        child: FutureBuilder<List<Book>>(
+          future: futureBooks,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<Book> books = snapshot.data!;
+              return SingleChildScrollView(
+                child: DataTable(
+                  sortColumnIndex: _currentSortColumn,
+                  sortAscending: _isAscending,
+                  columns: [
+                    DataColumn(
+                      label: Text(
+                        'id',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onSort: (columnIndex, _) {
+                        setState(() {
+                          _currentSortColumn = columnIndex;
+                          if (_isAscending == true) {
+                            _isAscending = false;
+                            books.sort(
+                              (bookA, bookB) => bookA.id.compareTo(bookB.id),
+                            );
+                          } else {
+                            _isAscending = true;
+                            books.sort(
+                              (bookA, bookB) => bookB.id.compareTo(bookA.id),
+                            );
+                          }
+                        });
+                      },
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'title',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onSort: (columnIndex, _) {
+                        setState(() {
+                          _currentSortColumn = columnIndex;
+                          if (_isAscending == true) {
+                            _isAscending = false;
+                            books.sort(
+                              (bookA, bookB) =>
+                                  bookA.title.compareTo(bookB.title),
+                            );
+                          } else {
+                            _isAscending = true;
+                            books.sort(
+                              (bookA, bookB) =>
+                                  bookB.title.compareTo(bookA.title),
+                            );
+                          }
+                        });
+                      },
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'author',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      onSort: (columnIndex, _) {
+                        setState(() {
+                          _currentSortColumn = columnIndex;
+                          if (_isAscending == true) {
+                            _isAscending = false;
+                            books.sort(
+                              (bookA, bookB) =>
+                                  bookA.author.compareTo(bookB.author),
+                            );
+                          } else {
+                            _isAscending = true;
+                            books.sort(
+                              (bookA, bookB) =>
+                                  bookB.author.compareTo(bookA.author),
+                            );
+                          }
+                        });
+                      },
+                    ),
+                  ],
+                  rows: books.map((Book book) {
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(book.id.toString())),
+                        DataCell(Text(book.title)),
+                        DataCell(Text(book.author)),
+                      ],
+                    );
+                  }).toList(),
+                ),
               );
-            }).toList(),
-          ),
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+            // By default, show a loading spinner.
+            return const CircularProgressIndicator();
+          },
         ),
       ),
     );
   }
+}
 
-  DataColumn sortableDataColumn(String labelText, String sortKey) {
-    return DataColumn(
-      label: Text(
-        labelText,
-        style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+class Book {
+  final int id;
+  final String author;
+  final String title;
+
+  const Book({required this.id, required this.author, required this.title});
+
+  factory Book.fromJson(Map<String, dynamic> json) {
+    return switch (json) {
+      {'id': int id, 'author': String author, 'title': String title} => Book(
+        id: id,
+        author: author,
+        title: title,
       ),
-      onSort: (columnIndex, _) {
-        setState(() {
-          _currentSortColumn = columnIndex;
-          if (_isAscending == true) {
-            _isAscending = false;
-            // sort the product list in Ascending, order by sortKey
-            _products.sort(
-              (productA, productB) =>
-                  productB[sortKey].compareTo(productA[sortKey]),
-            );
-          } else {
-            _isAscending = true;
-            // sort the product list in Descending, order by sortKey
-            _products.sort(
-              (productA, productB) =>
-                  productA[sortKey].compareTo(productB[sortKey]),
-            );
-          }
-        });
-      },
-    );
+      _ => throw const FormatException('Failed to load book.'),
+    };
+  }
+}
+
+Future<List<Book>> fetchBooks() async {
+  final response = await http.get(Uri.http('127.0.0.1:5000', '/books'));
+
+  if (response.statusCode == 200) {
+    Map<String, dynamic> resJson = jsonDecode(response.body);
+    List<dynamic> booksJson = resJson['books'];
+    return booksJson
+        .map((bookJson) => Book.fromJson(bookJson as Map<String, dynamic>))
+        .toList();
+  } else {
+    throw Exception('Failed to load books');
   }
 }
