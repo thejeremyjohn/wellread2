@@ -212,6 +212,10 @@ class BookImage(DBModel, CloudfrontMixin):
         return super().get_mimetype_agnostic_url(*args, **kwargs, s3_key=self.s3_key)
 
 
+class Review(DBModel):
+    __tablename__ = 'reviews'
+
+
 class User(DBModel):
     __tablename__ = 'users'
 
