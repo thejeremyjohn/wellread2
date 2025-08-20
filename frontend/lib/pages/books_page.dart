@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wellread2frontend/models/book.dart';
-import 'package:wellread2frontend/pages/second_route.dart';
+import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
+import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key});
@@ -16,12 +17,12 @@ class BooksPage extends StatefulWidget {
 class _BooksPageState extends State<BooksPage> {
   int _currentSortColumn = 0;
   bool _isAscending = true;
-  late Future<List<Book>> futureBooks;
+  late Future<List<Book>> _futureBooks;
 
   @override
   void initState() {
     super.initState();
-    futureBooks = fetchBooks();
+    _futureBooks = fetchBooks();
   }
 
   Future<List<Book>> fetchBooks() async {
@@ -40,113 +41,121 @@ class _BooksPageState extends State<BooksPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Book>>(
-      future: futureBooks,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Book> books = snapshot.data!;
-          return SingleChildScrollView(
-            child: DataTable(
-              sortColumnIndex: _currentSortColumn,
-              sortAscending: _isAscending,
-              columns: [
-                DataColumn(
-                  label: Text(
-                    'cover',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'title',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+    return Scaffold(
+      appBar: WellreadAppBar(),
+      body: FutureBuilder<List<Book>>(
+        future: _futureBooks,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Book> books = snapshot.data!;
+            return SingleChildScrollView(
+              child: DataTable(
+                sortColumnIndex: _currentSortColumn,
+                sortAscending: _isAscending,
+                columns: [
+                  DataColumn(
+                    label: Text(
+                      'cover',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  onSort: (columnIndex, _) {
-                    setState(() {
-                      _currentSortColumn = columnIndex;
-                      if (_isAscending == true) {
-                        _isAscending = false;
-                        books.sort(
-                          (bookA, bookB) => bookA.title.compareTo(bookB.title),
-                        );
-                      } else {
-                        _isAscending = true;
-                        books.sort(
-                          (bookA, bookB) => bookB.title.compareTo(bookA.title),
-                        );
-                      }
-                    });
-                  },
-                ),
-                DataColumn(
-                  label: Text(
-                    'author',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+                  DataColumn(
+                    label: Text(
+                      'title',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  onSort: (columnIndex, _) {
-                    setState(() {
-                      _currentSortColumn = columnIndex;
-                      if (_isAscending == true) {
-                        _isAscending = false;
-                        books.sort(
-                          (bookA, bookB) =>
-                              bookA.author.compareTo(bookB.author),
-                        );
-                      } else {
-                        _isAscending = true;
-                        books.sort(
-                          (bookA, bookB) =>
-                              bookB.author.compareTo(bookA.author),
-                        );
-                      }
-                    });
-                  },
-                ),
-              ],
-              rows: books.map((Book book) {
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Clickable(
-                        onClick: () {
-                          print('you clicked on ${book.title}');
-                          // TODO navigate to book page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (context) => const SecondRoute(),
-                            ),
+                    onSort: (columnIndex, _) {
+                      setState(() {
+                        _currentSortColumn = columnIndex;
+                        if (_isAscending == true) {
+                          _isAscending = false;
+                          books.sort(
+                            (bookA, bookB) =>
+                                bookA.title.compareTo(bookB.title),
                           );
-                        },
-                        child: book.cover,
+                        } else {
+                          _isAscending = true;
+                          books.sort(
+                            (bookA, bookB) =>
+                                bookB.title.compareTo(bookA.title),
+                          );
+                        }
+                      });
+                    },
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'author',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    DataCell(
-                      Clickable(
-                        onClick: () {
-                          print('you clicked on ${book.title}');
-                          // TODO navigate to book page
-                        },
-                        child: Text(book.title),
+                    onSort: (columnIndex, _) {
+                      setState(() {
+                        _currentSortColumn = columnIndex;
+                        if (_isAscending == true) {
+                          _isAscending = false;
+                          books.sort(
+                            (bookA, bookB) =>
+                                bookA.author.compareTo(bookB.author),
+                          );
+                        } else {
+                          _isAscending = true;
+                          books.sort(
+                            (bookA, bookB) =>
+                                bookB.author.compareTo(bookA.author),
+                          );
+                        }
+                      });
+                    },
+                  ),
+                ],
+                rows: books.map((Book book) {
+                  Future gotoBookPage() {
+                    return Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (context) => BookPage(book: book),
                       ),
-                    ),
-                    DataCell(Text(book.author)),
-                  ],
-                );
-              }).toList(),
-            ),
-          );
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-        return const CircularProgressIndicator();
-      },
+                    );
+                  }
+
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Clickable(
+                          onClick: () {
+                            print('you clicked on cover of ${book.title}');
+                            gotoBookPage();
+                          },
+                          child: book.cover128p,
+                        ),
+                      ),
+                      DataCell(
+                        Clickable(
+                          onClick: () {
+                            print('you clicked on ${book.title}');
+                            gotoBookPage();
+                          },
+                          child: Text(book.title),
+                        ),
+                      ),
+                      DataCell(Text(book.author)),
+                    ],
+                  );
+                }).toList(),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          }
+          return const CircularProgressIndicator();
+        },
+      ),
     );
   }
 }
