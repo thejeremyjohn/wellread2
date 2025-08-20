@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:wellread2frontend/models/book_image.dart';
 
 class Book {
   final int id;
   final String author;
   final String title;
-  final List<dynamic> images;
+  final List<BookImage> images;
 
   Book({
     required this.id,
@@ -19,14 +20,21 @@ class Book {
         'id': int id,
         'author': String author,
         'title': String title,
-        'images': List<dynamic> images,
+        'images': List images,
       } =>
-        Book(id: id, author: author, title: title, images: images),
+        Book(
+          id: id,
+          author: author,
+          title: title,
+          images: images
+              .map((i) => BookImage.fromJson(i as Map<String, dynamic>))
+              .toList(),
+        ),
       _ => throw const FormatException('Failed to load book.'),
     };
   }
 
   Image get cover => images.isEmpty
       ? Image.asset(width: 128, 'images/no-cover.png')
-      : Image.network(width: 128, images.first['url']);
+      : Image.network(width: 128, images.first.url);
 }

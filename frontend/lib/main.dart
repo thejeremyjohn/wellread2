@@ -114,31 +114,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   columns: [
                     DataColumn(
                       label: Text(
-                        'id',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onSort: (columnIndex, _) {
-                        setState(() {
-                          _currentSortColumn = columnIndex;
-                          if (_isAscending == true) {
-                            _isAscending = false;
-                            books.sort(
-                              (bookA, bookB) => bookA.id.compareTo(bookB.id),
-                            );
-                          } else {
-                            _isAscending = true;
-                            books.sort(
-                              (bookA, bookB) => bookB.id.compareTo(bookA.id),
-                            );
-                          }
-                        });
-                      },
-                    ),
-                    DataColumn(
-                      label: Text(
                         'cover',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -201,7 +176,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   rows: books.map((Book book) {
                     return DataRow(
                       cells: [
-                        DataCell(Text(book.id.toString())),
                         DataCell(book.cover),
                         DataCell(Text(book.title)),
                         DataCell(Text(book.author)),
