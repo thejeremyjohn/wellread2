@@ -176,8 +176,30 @@ class _MyHomePageState extends State<MyHomePage> {
                   rows: books.map((Book book) {
                     return DataRow(
                       cells: [
-                        DataCell(book.cover),
-                        DataCell(Text(book.title)),
+                        DataCell(
+                          Clickable(
+                            onClick: () {
+                              print('you clicked on ${book.title}');
+                              // TODO navigate to book page
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) => const SecondRoute(),
+                                ),
+                              );
+                            },
+                            child: book.cover,
+                          ),
+                        ),
+                        DataCell(
+                          Clickable(
+                            onClick: () {
+                              print('you clicked on ${book.title}');
+                              // TODO navigate to book page
+                            },
+                            child: Text(book.title),
+                          ),
+                        ),
                         DataCell(Text(book.author)),
                       ],
                     );
@@ -187,11 +209,25 @@ class _MyHomePageState extends State<MyHomePage> {
             } else if (snapshot.hasError) {
               return Text('${snapshot.error}');
             }
-            // By default, show a loading spinner.
             return const CircularProgressIndicator();
           },
         ),
       ),
+    );
+  }
+}
+
+class Clickable extends StatelessWidget {
+  const Clickable({super.key, this.onClick, this.child});
+
+  final Function()? onClick;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(onTap: onClick, child: child),
     );
   }
 }
@@ -207,5 +243,25 @@ Future<List<Book>> fetchBooks() async {
         .toList();
   } else {
     throw Exception('Failed to load books');
+  }
+}
+
+// placeholder TODO rm
+class SecondRoute extends StatelessWidget {
+  const SecondRoute({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Second Route')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Go back!'),
+        ),
+      ),
+    );
   }
 }
