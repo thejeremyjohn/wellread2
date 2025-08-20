@@ -1,8 +1,8 @@
-// ignore_for_file: avoid_print
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:wellread2frontend/models/book.dart';
+import 'package:wellread2frontend/wellread_app_bar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,62 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.brown,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(widget.title),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.book),
-                  tooltip: 'My Books',
-                  onPressed: () {
-                    print('You clicked My Books');
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart),
-                  tooltip: 'Browse',
-                  onPressed: () async {
-                    print('You clicked Browse');
-                    var url = Uri.http('127.0.0.1:5000', '/books');
-                    http.Response response = await http.get(
-                      url,
-                      // headers: { HttpHeaders.authorizationHeader: token != null ? "Bearer $token" : null },
-                    );
-
-                    print(response.body);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.person),
-                  tooltip: 'Profile',
-                  onPressed: () {
-                    print('You clicked Profile');
-                  },
-                ),
-              ],
-            ),
-            Container(),
-          ],
-        ),
-        actions: [
-          SizedBox(
-            width: 200,
-            child: TextFormField(
-              decoration: InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Search books',
-                suffixIcon: Icon(Icons.search),
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: WellreadAppBar(),
       body: SizedBox(
         width: double.infinity,
         child: FutureBuilder<List<Book>>(
