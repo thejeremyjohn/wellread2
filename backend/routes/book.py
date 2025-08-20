@@ -31,7 +31,7 @@ def books_get():
         books = books \
             .filter(Book.title == title)
 
-    id = request.args.get('id')
+    id = request.args.get('id', type=int)
     if id != None:
         books = books \
             .filter(Book.id == id)
@@ -51,8 +51,8 @@ def books_get():
 
 @app.route('/book/<book_id>', methods=['PUT'])
 @jwt_required()
-def book_update(book_id):
-    book = Book.query.get(book_id, f"book_id={book_id}")
+def book_update(book_id: int):
+    book = Book.query.get(book_id)
 
     for key, value in request.params.items():
         setattr(book, key, value)
@@ -66,8 +66,8 @@ def book_update(book_id):
 
 @app.route('/book/<book_id>', methods=['DELETE'])
 @jwt_required()
-def book_delete(book_id):
-    book = Book.query.get(book_id, f"book_id={book_id}")
+def book_delete(book_id: int):
+    book = Book.query.get(book_id)
 
     if book.images:
         for book_image in book.images:

@@ -6,7 +6,6 @@ import json
 from backend.app import app
 from backend import util_functions
 from backend.db_util.custom_base_util import DBModel
-from flask import request
 from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy.orm import validates
 from uuid import uuid1

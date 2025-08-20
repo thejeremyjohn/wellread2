@@ -9,7 +9,7 @@ from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from dotenv import load_dotenv; load_dotenv()
 from backend.db_util.custom_base_util import Base, BaseQuery, singular_camel_classname, plural_snakecase_collection
-from backend.custom_request import Request
+from backend.custom_request import CustomRequest
 
 # import smart_open
 import base64
@@ -42,7 +42,7 @@ def mk_cloudfront_signer(key_id='', key_file_path=''):
 
 
 app = Flask(__name__)
-app.request_class = Request
+app.request_class = CustomRequest
 app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)  # default minutes=15
 # app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
