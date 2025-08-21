@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
-import 'package:wellread2frontend/pages/books_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -106,12 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                               : '',
                         );
                         if (r.isOk) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BooksPage(),
-                            ),
-                          );
+                          context.go('/books');
                         }
                       }
                     });

@@ -10,51 +10,6 @@ void main() {
   runApp(const MyApp());
 }
 
-final _router = GoRouter(
-  navigatorKey: kNavigatorKey,
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) {
-        return FutureBuilder(
-          future: storage.read(key: 'accessToken'),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
-            return snapshot.hasData ? const BooksPage() : const LoginPage();
-          },
-        );
-      },
-    ),
-    GoRoute(path: '/books', builder: (context, state) => const BooksPage()),
-    GoRoute(
-      path: '/book/:bookId',
-      builder: (context, state) {
-        return BookPage(bookId: state.pathParameters['bookId']!);
-      },
-    ),
-    // ShellRoute(
-    //   builder: (BuildContext context, GoRouterState state, Widget child) {
-    //     return Scaffold(
-    //       body: child,
-    //       /* ... */
-    //       appBar: WellreadAppBar(),
-    //     );
-    //   },
-    //   routes: <RouteBase>[
-    //     GoRoute(path: '/books', builder: (context, state) => const BooksPage()),
-    //     GoRoute(
-    //       path: '/book/:bookId',
-    //       builder: (context, state) {
-    //         return BookPage(bookId: state.pathParameters['bookId']!);
-    //       },
-    //     ),
-    //   ],
-    // ),
-  ],
-);
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -63,7 +18,48 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
-      routerConfig: _router,
+      routerConfig: GoRouter(
+        navigatorKey: kNavigatorKey,
+        redirect: (BuildContext context, GoRouterState state) async {
+          final notLoggedIn = await storage.read(key: 'accessToken') == null;
+          return notLoggedIn ? '/login' : null;
+        },
+        routes: [
+          GoRoute(path: '/', redirect: (context, state) => '/books'),
+          GoRoute(
+            path: '/login', // TODO redirect if already logged in
+            builder: (context, state) => const LoginPage(),
+          ),
+          GoRoute(
+            path: '/books',
+            builder: (context, state) => const BooksPage(),
+          ),
+          GoRoute(
+            path: '/book/:bookId',
+            builder: (context, state) {
+              return BookPage(bookId: state.pathParameters['bookId']!);
+            },
+          ),
+          // ShellRoute(
+          //   builder: (BuildContext context, GoRouterState state, Widget child) {
+          //     return Scaffold(
+          //       body: child,
+          //       /* ... */
+          //       appBar: WellreadAppBar(),
+          //     );
+          //   },
+          //   routes: <RouteBase>[
+          //     GoRoute(path: '/books', builder: (context, state) => const BooksPage()),
+          //     GoRoute(
+          //       path: '/book/:bookId',
+          //       builder: (context, state) {
+          //         return BookPage(bookId: state.pathParameters['bookId']!);
+          //       },
+          //     ),
+          //   ],
+          // ),
+        ],
+      ),
     );
   }
 }
