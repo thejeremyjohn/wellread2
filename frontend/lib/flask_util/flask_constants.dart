@@ -4,7 +4,8 @@ import 'package:wellread2frontend/flask_util/expired_token_retry_policy.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http_interceptor/http/intercepted_client.dart';
 
-const flaskServer = 'http://localhost:5000';
+const flaskHost = '127.0.0.1:5000';
+const flaskServer = 'http://$flaskHost';
 const storage = FlutterSecureStorage();
 
 http.Client client = InterceptedClient.build(

@@ -29,7 +29,7 @@ class _BooksPageState extends State<BooksPage> {
         await client.get(Uri.parse('$flaskServer/books')) as FlaskResponse;
     if (r.isOk) {
       return (r.data['books'] as List)
-          .map((bookJson) => Book.fromJson(bookJson as Map<String, dynamic>))
+          .map((book) => Book.fromJson(book as Map<String, dynamic>))
           .toList();
     } else {
       throw Exception('Failed to load books');
