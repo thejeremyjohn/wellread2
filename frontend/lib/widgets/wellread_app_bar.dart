@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:wellread2frontend/flask_util/login_logout.dart';
 
 class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
   const WellreadAppBar({super.key});
@@ -34,13 +34,6 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
                 tooltip: 'Browse',
                 onPressed: () async {
                   print('You clicked Browse');
-                  var url = Uri.http('127.0.0.1:5000', '/books');
-                  http.Response response = await http.get(
-                    url,
-                    // headers: { HttpHeaders.authorizationHeader: token != null ? "Bearer $token" : null },
-                  );
-
-                  print(response.body);
                 },
               ),
               IconButton(
@@ -48,6 +41,14 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
                 tooltip: 'Profile',
                 onPressed: () {
                   print('You clicked Profile');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.logout),
+                tooltip: 'Logout',
+                onPressed: () {
+                  print('You clicked logout');
+                  logout();
                 },
               ),
             ],

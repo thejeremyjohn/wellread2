@@ -10,7 +10,7 @@ class BookImage {
         uuid: uuid,
         url: url,
       ),
-      _ => throw const FormatException('Failed to load bookImage.'),
+      _ => throw const FormatException('Failed to load BookImage.'),
     };
   }
 }
