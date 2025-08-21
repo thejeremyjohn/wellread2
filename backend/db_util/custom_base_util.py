@@ -60,15 +60,15 @@ class DBModel(Base):
 
     def get_expandables(self, adhoc_expandables={}):
         expandables = dict()
-        for column in self.__table__.get_children():
+        for column in self.__table__.columns:
             if column.foreign_keys:
                 try:
-                    thing, id = column.description.rsplit('_', 1)  # e.g. "experience", "uuid"
+                    thing, id = column.description.rsplit('_', 1)  # e.g. "book", "id"
                 except ValueError:  # not enough values to unpack (expected 2, got 1)
                     continue  # skip
                 if getattr(type(self), thing, None):  # if the model has this InstrumentedAttribute
                     expandables[thing] = column.description
-        return {**expandables, **adhoc_expandables}
+        return {**expandables, **adhoc_expandables}  # e.g. {'book': 'book_id'}
 
     @classmethod
     def upsert(self, lookups: dict, _echo=False, **updates) -> tuple:
