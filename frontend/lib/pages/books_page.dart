@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/flask_util/flask_constants.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:wellread2frontend/models/book.dart';
-import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
@@ -112,32 +112,17 @@ class _BooksPageState extends State<BooksPage> {
                   ),
                 ],
                 rows: books.map((Book book) {
-                  Future gotoBookPage() {
-                    return Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (context) => BookPage(book: book),
-                      ),
-                    );
-                  }
-
                   return DataRow(
                     cells: [
                       DataCell(
                         Clickable(
-                          onClick: () {
-                            print('you clicked on cover of ${book.title}');
-                            gotoBookPage();
-                          },
+                          onClick: () => context.go('/book/${book.id}'),
                           child: book.cover128p,
                         ),
                       ),
                       DataCell(
                         Clickable(
-                          onClick: () {
-                            print('you clicked on ${book.title}');
-                            gotoBookPage();
-                          },
+                          onClick: () => context.go('/book/${book.id}'),
                           child: Text(book.title),
                         ),
                       ),

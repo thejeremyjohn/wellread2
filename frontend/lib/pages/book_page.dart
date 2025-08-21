@@ -7,36 +7,45 @@ import 'package:wellread2frontend/models/review.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
 class BookPage extends StatefulWidget {
-  const BookPage({
-    super.key,
-    required this.book,
-    // required this.reviews, // TODO reviews
-  });
+  const BookPage({super.key, required this.bookId});
 
-  final Book book;
-  // late List<Review> reviews;
+  final String bookId;
 
   @override
   State<BookPage> createState() => _BookPageState();
 }
 
 class _BookPageState extends State<BookPage> {
+  late Future<Book> _futureBook;
   late Future<List<Review>> _futureReviews;
 
   @override
   void initState() {
     super.initState();
+    _futureBook = fetchBook();
     _futureReviews = fetchReviews();
   }
 
+  // TODO reuse fetchBooks. pre-req: refactor
+  Future<Book> fetchBook() async {
+    final r =
+        await client.get(Uri.parse('$flaskServer/books?id=${widget.bookId}'))
+            as FlaskResponse;
+    if (r.isOk) {
+      return (r.data['books'] as List)
+          .map((book) => Book.fromJson(book as Map<String, dynamic>))
+          .first;
+    } else {
+      throw Exception('Failed to load books');
+    }
+  }
+
   Future<List<Review>> fetchReviews() async {
-    // final url = Uri.http(flaskHost, '/reviews', {'book_id': widget.book.id});
     final url = Uri.parse(
-      '$flaskServer/reviews?book_id=${widget.book.id}&expand=user',
+      '$flaskServer/reviews?book_id=${widget.bookId}&expand=user',
     );
     final r = await client.get(url) as FlaskResponse;
     if (r.isOk) {
-      print(r.body);
       return (r.data['reviews'] as List)
           .map((review) => Review.fromJson(review as Map<String, dynamic>))
           .toList();
@@ -47,65 +56,79 @@ class _BookPageState extends State<BookPage> {
 
   @override
   Widget build(BuildContext context) {
-    Book book = widget.book;
     return Scaffold(
       appBar: WellreadAppBar(),
-      body: Center(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 1, child: Container()), // page side spacer
-            Expanded(flex: 1, child: book.cover),
-            Expanded(
-              flex: 3,
-              child: Column(
+      body: FutureBuilder(
+        future: _futureBook,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Book book = snapshot.data!;
+            return Center(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('title: ${book.title}'),
-                  Text('author: ${book.author}'),
-                  SizedBox(height: kPadding),
-                  Text('description: lorem ipsum fee fii foo fum'),
-                  SizedBox(height: kPadding),
-                  Text('Reviews...:'),
-                  FutureBuilder(
-                    future: _futureReviews,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        for (Review review in snapshot.data!) {
-                          return Row(
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'user.firstName: ${review.user!.firstName}',
-                                  ),
-                                  Text('user.email: ${review.user!.email}'),
-                                ],
-                              ),
-                              SizedBox(width: kPadding),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('rating ${review.rating}'),
-                                  Text('review ${review.review}'),
-                                ],
-                              ),
-                            ],
-                          );
-                        }
-                      } else if (snapshot.hasError) {
-                        return Text('${snapshot.error}');
-                      }
-                      return const CircularProgressIndicator();
-                    },
+                  Expanded(flex: 1, child: Container()), // page side spacer
+                  Expanded(flex: 1, child: book.cover),
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('title: ${book.title}'),
+                        Text('author: ${book.author}'),
+                        SizedBox(height: kPadding),
+                        Text('description: lorem ipsum fee fii foo fum'),
+                        SizedBox(height: kPadding),
+                        Text('Reviews...:'),
+                        FutureBuilder(
+                          future: _futureReviews,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              for (Review review in snapshot.data!) {
+                                return Row(
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'user.firstName: ${review.user!.firstName}',
+                                        ),
+                                        Text(
+                                          'user.email: ${review.user!.email}',
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(width: kPadding),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('rating ${review.rating}'),
+                                        Text('review ${review.review}'),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              }
+                            } else if (snapshot.hasError) {
+                              return Text('${snapshot.error}');
+                            }
+                            return const CircularProgressIndicator();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
+                  Expanded(flex: 1, child: Container()), // page side spacer
                 ],
               ),
-            ),
-            Expanded(flex: 1, child: Container()), // page side spacer
-          ],
-        ),
+            );
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          }
+          return const CircularProgressIndicator();
+        },
       ),
     );
   }
