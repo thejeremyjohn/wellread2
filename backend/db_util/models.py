@@ -148,15 +148,9 @@ class CloudfrontMixin():
 class Book(DBModel):
     __tablename__ = 'books'
 
-    def attrs_(self, expand=[], add_props=['book_images']):
-        attrs = super().attrs_(
-            # expand=expand,
-            # add_props=[ap for ap in add_props if ap not in Asset.PROHIBITED_ADD_PROPS],
-            # add_props=[ap for ap in add_props],
-        )
-        # images = [image.get_url(params={'width': 512}) for image in self.book_images]
+    def attrs_(self, expand=[], add_props=[]):
+        attrs = super().attrs_(expand=expand, add_props=add_props)
         images = [image.attrs for image in self.images]
-
         return {
             **attrs,
             'images': images,
@@ -165,7 +159,6 @@ class Book(DBModel):
 
     def images():
         def fget(self):
-            # return self.book_images
             return (
                 BookImage.query
                 .join(Book)
@@ -179,6 +172,10 @@ class Book(DBModel):
             self.book_images = value
         return locals()
     images = property(**images())
+
+    @property
+    def _reviews(self):
+        return [r.attrs for r in self.reviews]
 
 
 class BookImage(DBModel, CloudfrontMixin):
@@ -214,6 +211,10 @@ class BookImage(DBModel, CloudfrontMixin):
 
 class Review(DBModel):
     __tablename__ = 'reviews'
+
+    def attrs_(self, expand=[], add_props=[]):
+        return super().attrs_(expand=expand, add_props=add_props)
+    attrs = property(attrs_)
 
 
 class User(DBModel):

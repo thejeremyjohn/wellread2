@@ -34,7 +34,7 @@ def reviews_get():
     total_count = reviews.count()
     reviews = reviews.order_by_request_args()
     page, reviews = reviews.paginate_by_request_args()
-    reviews = [_.attrs for _ in reviews]
+    reviews = [r.attrs_(add_props=request.add_props, expand=request.expand) for r in reviews]
 
     return jsonify({
         'status': 'ok', 'error': None,

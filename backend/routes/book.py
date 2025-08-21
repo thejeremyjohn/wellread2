@@ -39,7 +39,8 @@ def books_get():
     total_count = books.count()
     books = books.order_by_request_args()
     page, books = books.paginate_by_request_args()
-    books = [_.attrs for _ in books]
+    books = [_.attrs_(add_props=request.add_props, expand=request.expand)
+             for _ in books]
 
     return jsonify({
         'status': 'ok', 'error': None,
