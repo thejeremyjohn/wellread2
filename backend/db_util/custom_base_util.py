@@ -31,7 +31,7 @@ class DBModel(Base):
             e = expansions.pop(0)
             assert e in expandables, f"{e} is not a valid expandable for {self.__tablename__}"
 
-            attrs.pop(expandables[e], None)  # remove this foreign key property, e.g. user_id
+            # attrs.pop(expandables[e], None)  # remove this foreign key property, e.g. user_id
             thing = self.__getattribute__(e)  # get the thing that was ref'd by that fkey, e.g. user
             attrs[e] = thing.attrs_(expand=['.'.join(expansions)]) if thing else None
 
