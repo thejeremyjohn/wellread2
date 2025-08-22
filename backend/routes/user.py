@@ -1,19 +1,22 @@
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, current_user
-from backend.app import app, db, User
+from backend.app import app, db, User, Bookshelf
 
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    user = User(
-        **request.params,
-    )
+    user = User(**request.params)
+    user.bookshelves = [
+        Bookshelf(name='want to read', can_delete=False),
+        Bookshelf(name='currently reading', can_delete=False),
+        Bookshelf(name='read', can_delete=False),
+    ]
     db.session.add(user)
     db.session.commit()
 
     return jsonify({
         'status': 'ok', 'error': None,
-        'user': user.attrs_(add_props=request.add_props),
+        'user': user.attrs_(add_props=request.add_props, expand=request.expand),
     })
 
 
@@ -31,7 +34,7 @@ def login():
         'status': 'ok', 'error': None,
         'access_token': access_token,
         'refresh_token': refresh_token,
-        'user': user.attrs_(add_props=request.add_props),
+        'user': user.attrs_(add_props=request.add_props, expand=request.expand),
     })
 
 
@@ -43,5 +46,5 @@ def login_refresh():
     return jsonify({
         'status': 'ok', 'error': None,
         'access_token': access_token,
-        'user': current_user.attrs_(add_props=request.add_props),
+        'user': current_user.attrs_(add_props=request.add_props, expand=request.expand),
     })

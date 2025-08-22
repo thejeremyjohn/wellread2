@@ -7,7 +7,7 @@ from backend.app import app, db, Bookshelf, BookBookshelf
 @jwt_required()
 def bookshelf_create():
     (params := request.params).pop('can_delete', None)  # disallow setting can_delete
-    bookshelf = Bookshelf(user=current_user, **params)
+    bookshelf = Bookshelf(user=current_user, **params, can_delete=True)
     db.session.add(bookshelf)
     db.session.commit()
 

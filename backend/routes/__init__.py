@@ -1,7 +1,7 @@
 from flask import jsonify
 from backend.app import app, jwt, User
 from sqlalchemy.exc import SQLAlchemyError
-# from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, MethodNotAllowed
 
 
@@ -17,10 +17,10 @@ def handle_exception(e):
         res = jsonify({'status': 'error', 'error': e})
         res.status_code = 400
         return res
-    # elif isinstance(e, ClientError):
-    #     res = jsonify({'status': 'error', 'error': e.response['Error']['Message']})
-    #     res.status_code = 400
-    #     return res
+    elif isinstance(e, ClientError):
+        res = jsonify({'status': 'error', 'error': e.response['Error']['Message']})
+        res.status_code = 400
+        return res
     elif isinstance(e, Forbidden):
         res.status_code = 403
         return res

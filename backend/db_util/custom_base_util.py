@@ -110,11 +110,7 @@ class BaseQuery(Query):
         return self.order_by(asc_or_desc(property))
 
     def paginate_by_request_args(self):
-        # TODO
-        # items_per_page = request.args.get('per_page', app.config['ITEMS_PER_PAGE'], type=int)
-        # items_per_page = min(items_per_page, app.config['ITEMS_MAX_PER_PAGE'])
-        items_per_page = request.args.get('per_page', 20, type=int)
-        items_per_page = min(items_per_page, 100)
+        items_per_page = min(request.args.get('per_page', 20, type=int), 100)
         max_page = self.paginate(page=1, per_page=items_per_page).pages or 1
         page = request.args.get('page', max_page, type=int)
         items = self.paginate(page=page, per_page=items_per_page, error_out=False).items

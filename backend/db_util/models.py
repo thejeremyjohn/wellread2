@@ -252,6 +252,10 @@ class User(DBModel):
         return attrs
     attrs = property(attrs_)
 
+    @property
+    def _bookshelves(self):
+        return [b.attrs for b in self.bookshelves]
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
