@@ -7,7 +7,7 @@ from backend.app import app
 from backend import util_functions
 from backend.db_util.custom_base_util import DBModel
 from flask_jwt_extended import create_access_token, create_refresh_token
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship
 from uuid import uuid1
 from validate_email import validate_email
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -207,6 +207,32 @@ class BookImage(DBModel, CloudfrontMixin):
 
     def get_mimetype_agnostic_url(self, *args, **kwargs):
         return super().get_mimetype_agnostic_url(*args, **kwargs, s3_key=self.s3_key)
+
+
+class BookBookshelf(DBModel):
+    __tablename__ = 'books_bookshelves'
+
+
+class Bookshelf(DBModel):
+    __tablename__ = 'bookshelves'
+
+    def attrs_(self, expand=[], add_props=[]):
+        attrs = super().attrs_(expand=expand, add_props=add_props)
+        attrs.pop('can_delete')  # cannot set -> no need to show
+        attrs['n_books'] = self._books.count()
+        return attrs
+    attrs = property(attrs_)
+
+    _books = relationship(
+        'Book',
+        secondary='books_bookshelves',
+        lazy='dynamic',
+        overlaps='book,book_bookshelves,bookshelf',  # to silence SAWarning
+    )
+
+    @property
+    def books(self):  # for add_props
+        return [b.attrs for b in self._books]
 
 
 class Review(DBModel):

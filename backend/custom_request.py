@@ -16,7 +16,7 @@ class CustomKeyError(KeyError, Exception):
 
 
 class CustomRequest(Request):
-    def params_(self, nullable=True):
+    def params_(self, nullable=True) -> CustomDict:
         params = CustomDict(self.is_json and self.json or self.form or {})
         if not nullable:
             assert params, f"expected json or form data, got {params}"
