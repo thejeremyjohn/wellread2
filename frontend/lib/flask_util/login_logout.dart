@@ -17,6 +17,6 @@ Future<FlaskResponse> login(String email, String password) async {
 
 Future<void> logout() async {
   await storage.deleteAll();
-  BuildContext? context = kNavigatorKey.currentContext;
+  BuildContext? context = kRootNavKey.currentContext;
   if (context != null && context.mounted) context.go('/login');
 }

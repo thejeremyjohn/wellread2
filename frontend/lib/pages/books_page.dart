@@ -4,7 +4,6 @@ import 'package:wellread2frontend/flask_util/flask_constants.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
-import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key});
@@ -39,7 +38,6 @@ class _BooksPageState extends State<BooksPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: WellreadAppBar(),
       body: FutureBuilder<List<Book>>(
         future: _futureBooks,
         builder: (context, snapshot) {
