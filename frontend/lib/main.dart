@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wellread2frontend/constants.dart';
-import 'package:wellread2frontend/flask_util/flask_constants.dart';
+import 'package:wellread2frontend/flask_util/login_logout.dart';
 import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
@@ -22,21 +22,20 @@ class MyApp extends StatelessWidget {
       routerConfig: GoRouter(
         navigatorKey: kRootNavKey,
         initialLocation: '/books',
-        redirect: (BuildContext context, GoRouterState state) async {
-          final notLoggedIn = await storage.read(key: 'accessToken') == null;
-          return notLoggedIn ? '/login' : null;
-        },
+        redirect: (context, state) async =>
+            await isLoggedIn() ? null : '/login',
         routes: [
           GoRoute(path: '/', redirect: (context, state) => '/books'),
           GoRoute(
-            path: '/login', // TODO redirect if already logged in
+            path: '/login',
+            redirect: (context, state) async =>
+                await isLoggedIn() ? '/books' : null,
             builder: (context, state) => const LoginPage(),
           ),
           ShellRoute(
             navigatorKey: kShellNavKey,
-            builder: (BuildContext context, GoRouterState state, Widget child) {
-              return Scaffold(appBar: WellreadAppBar(), body: child);
-            },
+            builder: (context, state, child) =>
+                Scaffold(appBar: WellreadAppBar(), body: child),
             routes: <RouteBase>[
               GoRoute(
                 path: '/books',
@@ -44,9 +43,8 @@ class MyApp extends StatelessWidget {
               ),
               GoRoute(
                 path: '/book/:bookId',
-                builder: (context, state) {
-                  return BookPage(bookId: state.pathParameters['bookId']!);
-                },
+                builder: (context, state) =>
+                    BookPage(bookId: state.pathParameters['bookId']!),
               ),
             ],
           ),

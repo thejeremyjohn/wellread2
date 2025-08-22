@@ -20,3 +20,6 @@ Future<void> logout() async {
   BuildContext? context = kRootNavKey.currentContext;
   if (context != null && context.mounted) context.go('/login');
 }
+
+Future<bool> isLoggedIn() async =>
+    await storage.containsKey(key: 'accessToken');
