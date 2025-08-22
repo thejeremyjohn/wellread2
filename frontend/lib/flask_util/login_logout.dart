@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_constants.dart';
@@ -16,7 +17,6 @@ Future<FlaskResponse> login(String email, String password) async {
 
 Future<void> logout() async {
   await storage.deleteAll();
-  if (kNavigatorKey.currentState != null) {
-    kNavigatorKey.currentContext!.go('/login');
-  }
+  BuildContext? context = kNavigatorKey.currentContext;
+  if (context != null && context.mounted) context.go('/login');
 }
