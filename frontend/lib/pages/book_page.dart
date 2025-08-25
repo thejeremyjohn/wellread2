@@ -57,68 +57,77 @@ class _BookPageState extends State<BookPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilder(
-        future: _futureBook,
+        future: Future.wait([_futureBook, _futureReviews]),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Book book = snapshot.data!;
+            Book book = snapshot.data![0] as Book;
+            List<Review> reviews = snapshot.data![1] as List<Review>;
+
+            Widget coverAndShelf = Column(children: [book.cover]);
+
+            Widget detailsAndReviews = ListView(
+              children: [
+                // book details
+                Text(
+                  book.title,
+                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                    fontFamily: 'LibreBaskerville',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  book.author,
+                  style: TextStyle(
+                    fontFamily: 'LibreBaskerville',
+                    fontWeight: FontWeight.w400, // normal
+                  ),
+                ),
+                SizedBox(height: kPadding),
+                Text(book.description ?? ''),
+                SizedBox(height: kPadding),
+
+                // reviews
+                Text(
+                  'Community Reviews:',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontFamily: 'LibreBaskerville',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+                for (Review review in reviews) ReviewWidget(review: review),
+              ],
+            );
+
             return Center(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(flex: 1, child: Container()), // page side spacer
-                  Expanded(flex: 1, child: book.cover),
+                  // Expanded(flex: 1, child: Container()), // page side spacer
                   Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('title: ${book.title}'),
-                        Text('author: ${book.author}'),
-                        SizedBox(height: kPadding),
-                        Text('description: lorem ipsum fee fii foo fum'),
-                        SizedBox(height: kPadding),
-                        Text('Reviews...:'),
-                        FutureBuilder(
-                          future: _futureReviews,
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              for (Review review in snapshot.data!) {
-                                return Row(
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'user.firstName: ${review.user!.firstName}',
-                                        ),
-                                        Text(
-                                          'user.email: ${review.user!.email}',
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(width: kPadding),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('rating ${review.rating}'),
-                                        Text('review ${review.review}'),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              }
-                            } else if (snapshot.hasError) {
-                              return Text('${snapshot.error}');
-                            }
-                            return const CircularProgressIndicator();
-                          },
-                        ),
-                      ],
+                    flex: 1,
+                    child: Container(
+                      margin: EdgeInsets.all(kPadding),
+                      child: coverAndShelf,
                     ),
                   ),
-                  Expanded(flex: 1, child: Container()), // page side spacer
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      margin: EdgeInsets.all(kPadding),
+                      child: detailsAndReviews,
+                    ),
+                  ),
+                  // Expanded(flex: 1, child: Container()), // page side spacer
                 ],
               ),
             );
@@ -128,6 +137,38 @@ class _BookPageState extends State<BookPage> {
           return const CircularProgressIndicator();
         },
       ),
+    );
+  }
+}
+
+class ReviewWidget extends StatelessWidget {
+  const ReviewWidget({super.key, required this.review});
+
+  final Review review;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [Text(review.user!.firstName), Text(review.user!.email)],
+          ),
+        ),
+        SizedBox(width: kPadding),
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(review.rating.toString()),
+              Text(review.review, softWrap: true, maxLines: 5),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

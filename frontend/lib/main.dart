@@ -11,45 +11,58 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GoRouter goRouter;
+
+  @override
+  void initState() {
+    goRouter = GoRouter(
+      navigatorKey: kRootNavKey,
+      initialLocation: '/books',
+      redirect: (context, state) async => await isLoggedIn() ? null : '/login',
+      routes: [
+        GoRoute(path: '/', redirect: (context, state) => '/books'),
+        GoRoute(
+          path: '/login',
+          redirect: (context, state) async =>
+              await isLoggedIn() ? '/books' : null,
+          builder: (context, state) => const LoginPage(),
+        ),
+        ShellRoute(
+          navigatorKey: kShellNavKey,
+          builder: (context, state, child) =>
+              Scaffold(appBar: WellreadAppBar(), body: child),
+          routes: <RouteBase>[
+            GoRoute(
+              path: '/books',
+              builder: (context, state) => const BooksPage(),
+            ),
+            GoRoute(
+              path: '/book/:bookId',
+              builder: (context, state) =>
+                  BookPage(bookId: state.pathParameters['bookId']!),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
-      routerConfig: GoRouter(
-        navigatorKey: kRootNavKey,
-        initialLocation: '/books',
-        redirect: (context, state) async =>
-            await isLoggedIn() ? null : '/login',
-        routes: [
-          GoRoute(path: '/', redirect: (context, state) => '/books'),
-          GoRoute(
-            path: '/login',
-            redirect: (context, state) async =>
-                await isLoggedIn() ? '/books' : null,
-            builder: (context, state) => const LoginPage(),
-          ),
-          ShellRoute(
-            navigatorKey: kShellNavKey,
-            builder: (context, state, child) =>
-                Scaffold(appBar: WellreadAppBar(), body: child),
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/books',
-                builder: (context, state) => const BooksPage(),
-              ),
-              GoRoute(
-                path: '/book/:bookId',
-                builder: (context, state) =>
-                    BookPage(bookId: state.pathParameters['bookId']!),
-              ),
-            ],
-          ),
-        ],
-      ),
+      theme: ThemeData(brightness: Brightness.dark, fontFamily: 'Montserrat'),
+      routerConfig: goRouter,
     );
   }
 }
