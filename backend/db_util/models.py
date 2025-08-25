@@ -3,11 +3,13 @@ import boto3
 import concurrent.futures
 import json
 
-from backend.app import app
+from backend.app import app, db
 from backend import util_functions
 from backend.db_util.custom_base_util import DBModel
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask import request
+from flask_jwt_extended import create_access_token, create_refresh_token, current_user
 from sqlalchemy.orm import validates, relationship
+from sqlalchemy.sql.functions import func
 from uuid import uuid1
 from validate_email import validate_email
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -177,6 +179,53 @@ class Book(DBModel):
     def _reviews(self):
         return [r.attrs for r in self.reviews]
 
+    @property
+    def avg_rating(self):  # for add_props
+        return (Review.query
+                .join(Book)
+                .filter(Book.id == self.id)
+                .with_entities(zero_if_null(
+                    db.func.avg(Review.rating).cast(db.DOUBLE_PRECISION)
+                )).scalar())
+
+    @property
+    def my_review(self):  # for add_props
+        ''' current_user's review of this book '''
+        if not request:
+            raise Exception('cannot get `my_rating` outside of request context')
+        review = (Review.query
+                  .filter(Review.book_id == self.id,
+                          Review.user_id == current_user.id)
+                  .one_or_none())
+        return review.attrs if review else None
+
+    @property
+    def my_rating(self):  # for add_props
+        ''' current_user's review.rating of this book '''
+        if not request:
+            raise Exception('cannot get `my_rating` outside of request context')
+        review = self.my_review
+        return review['rating'] if review else 0
+
+    _shelves = relationship(
+        'Bookshelf',
+        secondary='books_bookshelves',
+        lazy='dynamic',
+        overlaps='book,book_bookshelves,bookshelf',  # to silence SAWarning
+        back_populates='_books',
+    )
+
+    @property
+    def shelves(self):  # for add_props
+        return [b.attrs for b in self._shelves]
+
+    @property
+    def my_shelves(self):  # for add_props
+        ''' current_user's shelves of this book '''
+        if not request:
+            raise Exception('cannot get `my_shelves` outside of request context')
+        return [b.attrs for b in self._shelves.filter(Bookshelf.user_id == current_user.id)]
+
 
 class BookImage(DBModel, CloudfrontMixin):
     __tablename__ = 'book_images'
@@ -219,7 +268,6 @@ class Bookshelf(DBModel):
     def attrs_(self, expand=[], add_props=[]):
         attrs = super().attrs_(expand=expand, add_props=add_props)
         attrs.pop('can_delete')  # cannot set -> no need to show
-        attrs['n_books'] = self._books.count()
         return attrs
     attrs = property(attrs_)
 
@@ -228,11 +276,16 @@ class Bookshelf(DBModel):
         secondary='books_bookshelves',
         lazy='dynamic',
         overlaps='book,book_bookshelves,bookshelf',  # to silence SAWarning
+        back_populates='_shelves',
     )
 
     @property
     def books(self):  # for add_props
         return [b.attrs for b in self._books]
+
+    @property
+    def n_books(self):  # for add_props
+        return self._books.count()
 
 
 class Review(DBModel):
@@ -289,3 +342,7 @@ class User(DBModel):
 
     def create_refresh_token(self, **kwargs):
         return create_refresh_token(identity=str(self.id), **kwargs)
+
+
+def zero_if_null(n):
+    return db.case((n == None, 0), else_=n)
