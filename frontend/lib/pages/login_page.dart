@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                 height: 49,
                 child: ElevatedButton(
                   onPressed: () async {
-                    login('user1@email.com', 'password').then((
+                    login('guest1@email.com', 'password').then((
                       FlaskResponse r,
                     ) {
                       if (context.mounted) {

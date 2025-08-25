@@ -3,14 +3,16 @@ import 'package:wellread2frontend/models/book_image.dart';
 
 class Book {
   final int id;
-  final String author;
   final String title;
+  final String author;
+  final String? description;
   final List<BookImage> images;
 
   Book({
     required this.id,
-    required this.author,
     required this.title,
+    required this.author,
+    this.description,
     required this.images,
   });
 
@@ -18,14 +20,16 @@ class Book {
     return switch (json) {
       {
         'id': int id,
-        'author': String author,
         'title': String title,
+        'author': String author,
+        'description': String description,
         'images': List images,
       } =>
         Book(
           id: id,
-          author: author,
           title: title,
+          author: author,
+          description: description,
           images: images
               .map((i) => BookImage.fromJson(i as Map<String, dynamic>))
               .toList(),
