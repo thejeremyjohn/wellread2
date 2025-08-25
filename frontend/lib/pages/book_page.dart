@@ -28,7 +28,11 @@ class _BookPageState extends State<BookPage> {
   // TODO reuse fetchBooks. pre-req: refactor
   Future<Book> fetchBook() async {
     final r =
-        await client.get(Uri.parse('$flaskServer/books?id=${widget.bookId}'))
+        await client.get(
+              Uri.parse(
+                '$flaskServer/books?id=${widget.bookId}&add_props=avg_rating,my_rating,my_shelves',
+              ),
+            )
             as FlaskResponse;
     if (r.isOk) {
       return (r.data['books'] as List)
@@ -60,7 +64,23 @@ class _BookPageState extends State<BookPage> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           Book book = snapshot.data!;
-          return Column(children: [book.cover]);
+          return Column(
+            children: [
+              book.cover,
+              SizedBox(height: kPadding),
+              // TODO myShelves should hold ONLY one of want to read, currently reading, read
+              Text(book.myShelves!.first.name),
+              SizedBox(height: kPadding),
+              // TODO myRating as stars
+              Text(
+                book.myRating!.toString(),
+                style: TextStyle(
+                  fontFamily: 'LibreBaskerville',
+                  fontWeight: FontWeight.w700, // normal
+                ),
+              ),
+            ],
+          );
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
@@ -88,6 +108,15 @@ class _BookPageState extends State<BookPage> {
                 style: TextStyle(
                   fontFamily: 'LibreBaskerville',
                   fontWeight: FontWeight.w400, // normal
+                ),
+              ),
+              SizedBox(height: kPadding),
+              // TODO avgRating as stars
+              Text(
+                book.avgRating!.toString(),
+                style: TextStyle(
+                  fontFamily: 'LibreBaskerville',
+                  fontWeight: FontWeight.w700, // normal
                 ),
               ),
               SizedBox(height: kPadding),

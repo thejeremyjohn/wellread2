@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wellread2frontend/models/book_image.dart';
+import 'package:wellread2frontend/models/bookshelf.dart';
 
 class Book {
   final int id;
@@ -8,15 +9,32 @@ class Book {
   final String? description;
   final List<BookImage> images;
 
+  double? myRating;
+  double? avgRating;
+  List<Bookshelf>? myShelves;
+
   Book({
     required this.id,
     required this.title,
     required this.author,
     this.description,
     required this.images,
+    this.myRating,
+    this.avgRating,
+    this.myShelves,
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
+    double? myRating = json.containsKey('my_rating') ? json['my_rating'] : 0.0;
+    double? avgRating = json.containsKey('avg_rating')
+        ? json['avg_rating']
+        : 0.0;
+    List<Bookshelf>? myShelves = json.containsKey('my_shelves')
+        ? (json['my_shelves'] as List)
+              .map((shelf) => Bookshelf.fromJson(shelf))
+              .toList()
+        : null;
+
     return switch (json) {
       {
         'id': int id,
@@ -33,6 +51,9 @@ class Book {
           images: images
               .map((i) => BookImage.fromJson(i as Map<String, dynamic>))
               .toList(),
+          myRating: myRating,
+          avgRating: avgRating,
+          myShelves: myShelves,
         ),
       _ => throw const FormatException('Failed to load book.'),
     };
