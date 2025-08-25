@@ -55,87 +55,111 @@ class _BookPageState extends State<BookPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder(
-        future: Future.wait([_futureBook, _futureReviews]),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            Book book = snapshot.data![0] as Book;
-            List<Review> reviews = snapshot.data![1] as List<Review>;
+    Widget coverAndShelf = FutureBuilder(
+      future: _futureBook,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          Book book = snapshot.data!;
+          return Column(children: [book.cover]);
+        } else if (snapshot.hasError) {
+          return Text('${snapshot.error}');
+        }
+        return const CircularProgressIndicator();
+      },
+    );
 
-            Widget coverAndShelf = Column(children: [book.cover]);
-
-            Widget detailsAndReviews = ListView(
-              children: [
-                // book details
-                Text(
-                  book.title,
-                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                    fontFamily: 'LibreBaskerville',
-                    fontWeight: FontWeight.w600,
-                  ),
+    Widget bookDetails = FutureBuilder(
+      future: _futureBook,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          Book book = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                book.title,
+                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                  fontFamily: 'LibreBaskerville',
+                  fontWeight: FontWeight.w600,
                 ),
-                Text(
-                  book.author,
-                  style: TextStyle(
-                    fontFamily: 'LibreBaskerville',
-                    fontWeight: FontWeight.w400, // normal
-                  ),
-                ),
-                SizedBox(height: kPadding),
-                Text(book.description ?? ''),
-                SizedBox(height: kPadding),
-
-                // reviews
-                Text(
-                  'Community Reviews:',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontFamily: 'LibreBaskerville',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-                for (Review review in reviews) ReviewWidget(review: review),
-              ],
-            );
-
-            return Center(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Expanded(flex: 1, child: Container()), // page side spacer
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      margin: EdgeInsets.all(kPadding),
-                      child: coverAndShelf,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      margin: EdgeInsets.all(kPadding),
-                      child: detailsAndReviews,
-                    ),
-                  ),
-                  // Expanded(flex: 1, child: Container()), // page side spacer
-                ],
               ),
-            );
-          } else if (snapshot.hasError) {
-            return Text('${snapshot.error}');
-          }
-          return const CircularProgressIndicator();
-        },
+              Text(
+                book.author,
+                style: TextStyle(
+                  fontFamily: 'LibreBaskerville',
+                  fontWeight: FontWeight.w400, // normal
+                ),
+              ),
+              SizedBox(height: kPadding),
+              Text(book.description ?? ''),
+              SizedBox(height: kPadding),
+            ],
+          );
+        } else if (snapshot.hasError) {
+          return Text('${snapshot.error}');
+        }
+        return const CircularProgressIndicator();
+      },
+    );
+
+    Widget communityReviews = FutureBuilder(
+      future: _futureReviews,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Review> reviews = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Community Reviews:',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontFamily: 'LibreBaskerville',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+              for (Review review in reviews) ReviewWidget(review: review),
+            ],
+          );
+        } else if (snapshot.hasError) {
+          return Text('${snapshot.error}');
+        }
+        return const CircularProgressIndicator();
+      },
+    );
+
+    return Scaffold(
+      body: Center(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Expanded(flex: 1, child: Container()), // page side spacer
+            Expanded(
+              flex: 1,
+              child: Container(
+                margin: EdgeInsets.all(kPadding),
+                child: coverAndShelf,
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Container(
+                margin: EdgeInsets.all(kPadding),
+                child: ListView(children: [bookDetails, communityReviews]),
+              ),
+            ),
+            // Expanded(flex: 1, child: Container()), // page side spacer
+          ],
+        ),
       ),
     );
   }
