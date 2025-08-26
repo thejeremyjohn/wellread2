@@ -7,9 +7,7 @@ from backend.app import app, db, User, Bookshelf
 def signup():
     user = User(**request.params)
     user.bookshelves = [
-        Bookshelf(name='want to read', can_delete=False),
-        Bookshelf(name='currently reading', can_delete=False),
-        Bookshelf(name='read', can_delete=False),
+        Bookshelf(name=name, can_delete=False) for name in Bookshelf.ESSENTIALS
     ]
     db.session.add(user)
     db.session.commit()

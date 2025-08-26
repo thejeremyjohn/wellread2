@@ -176,7 +176,7 @@ class Book(DBModel):
     images = property(**images())
 
     @property
-    def _reviews(self):  # for add_props
+    def reviews_(self):  # for add_props
         return [r.attrs for r in self.reviews]
 
     @property
@@ -278,6 +278,8 @@ class BookBookshelf(DBModel):
 class Bookshelf(DBModel):
     __tablename__ = 'bookshelves'
 
+    ESSENTIALS = ['want to read', 'currently reading', 'read']
+
     def attrs_(self, expand=[], add_props=[]):
         attrs = super().attrs_(expand=expand, add_props=add_props)
         attrs.pop('can_delete')  # cannot set -> no need to show
@@ -307,6 +309,30 @@ class Review(DBModel):
     def attrs_(self, expand=[], add_props=[]):
         return super().attrs_(expand=expand, add_props=add_props)
     attrs = property(attrs_)
+
+    @property
+    def shelves(self):  # for add_props
+        bookshelves = (
+            Bookshelf.query
+            .join(BookBookshelf)
+            .join(Review, Review.book_id == BookBookshelf.book_id)
+            .filter(Review.book_id == self.book_id, Review.user_id == self.user_id)
+            # .filter(Bookshelf.name.notin_(Bookshelf.ESSENTIALS))
+        )
+        return [b.attrs for b in bookshelves]
+
+    @property
+    def tags(self):  # for add_props
+        return self.shelves
+
+    @property
+    def user_(self):  # for add_props
+        ''' special-case alternative to expand=user '''
+        u = self.user
+        return {
+            **u.attrs,
+            'n_reviews': u.n_reviews,
+        }
 
 
 class User(DBModel):
@@ -353,7 +379,7 @@ class User(DBModel):
         return create_refresh_token(identity=str(self.id), **kwargs)
 
     @property
-    def _bookshelves(self):   # for add_props
+    def bookshelves_(self):   # for add_props
         return [b.attrs for b in self.bookshelves]
 
     @property
