@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
@@ -71,20 +72,39 @@ class _BookPageState extends State<BookPage> {
             book.cover,
             SizedBox(height: kPadding),
             // TODO myShelves should hold ONLY one of want to read, currently reading, read
-            Text(
-              book.myShelves.isNotEmpty
-                  ? book.myShelves.first.name
-                  : 'unshelved',
-            ),
-            SizedBox(height: kPadding),
-            // TODO myRating as stars
-            Text(
-              book.myRating!.toString(),
-              style: TextStyle(
-                fontFamily: 'LibreBaskerville',
-                fontWeight: FontWeight.w700, // normal
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(
+                    Colors.green.shade800,
+                  ),
+                ),
+                onPressed: () {
+                  // TODO open dialog to change shelf OR 'want to read' if unshelved
+                },
+                child: Text(
+                  book.myShelves.isNotEmpty
+                      ? book.myShelves.first.name
+                      : 'unshelved',
+                ),
               ),
             ),
+            SizedBox(height: kPadding),
+            RatingBar.builder(
+              initialRating: book.myRating!,
+              minRating: 1,
+              itemSize: Theme.of(context).textTheme.headlineLarge!.fontSize!,
+              itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+              itemBuilder: (context, idx) =>
+                  Icon(Icons.star, color: Colors.amber),
+              onRatingUpdate: (rating) {
+                // TODO review_update
+                book.myRating = rating;
+                setState(() {});
+              },
+            ),
+            Text('Rate this book'),
           ],
         );
       },
@@ -112,13 +132,28 @@ class _BookPageState extends State<BookPage> {
               ),
             ),
             SizedBox(height: kPadding),
-            // TODO avgRating as stars
-            Text(
-              book.avgRating!.toString(),
-              style: TextStyle(
-                fontFamily: 'LibreBaskerville',
-                fontWeight: FontWeight.w700, // normal
-              ),
+            Row(
+              children: [
+                RatingBar.builder(
+                  initialRating: book.avgRating!,
+                  itemSize: Theme.of(
+                    context,
+                  ).textTheme.headlineLarge!.fontSize!,
+                  itemBuilder: (context, idx) =>
+                      Icon(Icons.star, color: Colors.amber),
+                  onRatingUpdate: (rating) {},
+                  ignoreGestures: true,
+                ),
+                SizedBox(width: kPadding),
+                Text(
+                  book.avgRating!.toString(),
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    fontFamily: 'LibreBaskerville',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                // TODO show n_ratings, n_reviews
+              ],
             ),
             SizedBox(height: kPadding),
             Text(book.description ?? ''),
