@@ -3,6 +3,7 @@ import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/review.dart';
+import 'package:wellread2frontend/widgets/async_widget.dart';
 
 class BookPage extends StatefulWidget {
   const BookPage({super.key, required this.bookId});
@@ -61,114 +62,99 @@ class _BookPageState extends State<BookPage> {
 
   @override
   Widget build(BuildContext context) {
-    Widget coverAndShelf = FutureBuilder(
+    Widget coverAndShelf = AsyncWidget(
       future: _futureBook,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          Book book = snapshot.data!;
-          return Column(
-            children: [
-              book.cover,
-              SizedBox(height: kPadding),
-              // TODO myShelves should hold ONLY one of want to read, currently reading, read
-              Text(
-                book.myShelves.isNotEmpty
-                    ? book.myShelves.first.name
-                    : 'unshelved',
+      builder: (context, awaitedData) {
+        Book book = awaitedData;
+        return Column(
+          children: [
+            book.cover,
+            SizedBox(height: kPadding),
+            // TODO myShelves should hold ONLY one of want to read, currently reading, read
+            Text(
+              book.myShelves.isNotEmpty
+                  ? book.myShelves.first.name
+                  : 'unshelved',
+            ),
+            SizedBox(height: kPadding),
+            // TODO myRating as stars
+            Text(
+              book.myRating!.toString(),
+              style: TextStyle(
+                fontFamily: 'LibreBaskerville',
+                fontWeight: FontWeight.w700, // normal
               ),
-              SizedBox(height: kPadding),
-              // TODO myRating as stars
-              Text(
-                book.myRating!.toString(),
-                style: TextStyle(
-                  fontFamily: 'LibreBaskerville',
-                  fontWeight: FontWeight.w700, // normal
-                ),
-              ),
-            ],
-          );
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-        return const CircularProgressIndicator();
+            ),
+          ],
+        );
       },
     );
 
-    Widget bookDetails = FutureBuilder(
+    Widget bookDetails = AsyncWidget(
       future: _futureBook,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          Book book = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                book.title,
-                style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                  fontFamily: 'LibreBaskerville',
-                  fontWeight: FontWeight.w600,
-                ),
+      builder: (context, awaitedData) {
+        Book book = awaitedData;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              book.title,
+              style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+                fontFamily: 'LibreBaskerville',
+                fontWeight: FontWeight.w600,
               ),
-              Text(
-                book.author,
-                style: TextStyle(
-                  fontFamily: 'LibreBaskerville',
-                  fontWeight: FontWeight.w400, // normal
-                ),
+            ),
+            Text(
+              book.author,
+              style: TextStyle(
+                fontFamily: 'LibreBaskerville',
+                fontWeight: FontWeight.w400, // normal
               ),
-              SizedBox(height: kPadding),
-              // TODO avgRating as stars
-              Text(
-                book.avgRating!.toString(),
-                style: TextStyle(
-                  fontFamily: 'LibreBaskerville',
-                  fontWeight: FontWeight.w700, // normal
-                ),
+            ),
+            SizedBox(height: kPadding),
+            // TODO avgRating as stars
+            Text(
+              book.avgRating!.toString(),
+              style: TextStyle(
+                fontFamily: 'LibreBaskerville',
+                fontWeight: FontWeight.w700, // normal
               ),
-              SizedBox(height: kPadding),
-              Text(book.description ?? ''),
-              SizedBox(height: kPadding),
-            ],
-          );
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-        return const CircularProgressIndicator();
+            ),
+            SizedBox(height: kPadding),
+            Text(book.description ?? ''),
+            SizedBox(height: kPadding),
+          ],
+        );
       },
     );
 
-    Widget communityReviews = FutureBuilder(
+    Widget communityReviews = AsyncWidget(
       future: _futureReviews,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Review> reviews = snapshot.data!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Community Reviews:',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontFamily: 'LibreBaskerville',
-                  fontWeight: FontWeight.w600,
-                ),
+      builder: (context, awaitedData) {
+        List<Review> reviews = awaitedData;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Community Reviews:',
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontFamily: 'LibreBaskerville',
+                fontWeight: FontWeight.w600,
               ),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-              for (Review review in reviews) ReviewWidget(review: review),
-            ],
-          );
-        } else if (snapshot.hasError) {
-          return Text('${snapshot.error}');
-        }
-        return const CircularProgressIndicator();
+            ),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in reviews) ReviewWidget(review: review),
+          ],
+        );
       },
     );
 
