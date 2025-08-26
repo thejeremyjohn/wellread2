@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_interceptor/http_interceptor.dart';
-import 'package:wellread2frontend/flask_util/flask_constants.dart';
 
 class AuthApiInterceptor implements InterceptorContract {
   @override

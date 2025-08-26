@@ -11,7 +11,7 @@ class Book {
 
   double? myRating;
   double? avgRating;
-  List<Bookshelf>? myShelves;
+  List<Bookshelf> myShelves;
 
   Book({
     required this.id,
@@ -21,7 +21,7 @@ class Book {
     required this.images,
     this.myRating,
     this.avgRating,
-    this.myShelves,
+    this.myShelves = const [],
   });
 
   factory Book.fromJson(Map<String, dynamic> json) {
@@ -29,11 +29,11 @@ class Book {
     double? avgRating = json.containsKey('avg_rating')
         ? json['avg_rating']
         : 0.0;
-    List<Bookshelf>? myShelves = json.containsKey('my_shelves')
+    List<Bookshelf> myShelves = json.containsKey('my_shelves')
         ? (json['my_shelves'] as List)
               .map((shelf) => Bookshelf.fromJson(shelf))
               .toList()
-        : null;
+        : [];
 
     return switch (json) {
       {

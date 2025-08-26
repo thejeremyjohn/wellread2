@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wellread2frontend/constants.dart';
-import 'package:wellread2frontend/flask_util/flask_constants.dart';
-import 'package:wellread2frontend/flask_util/flask_response.dart';
+import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/review.dart';
 
@@ -27,13 +26,13 @@ class _BookPageState extends State<BookPage> {
 
   // TODO reuse fetchBooks. pre-req: refactor
   Future<Book> fetchBook() async {
-    final r =
-        await client.get(
-              Uri.parse(
-                '$flaskServer/books?id=${widget.bookId}&add_props=avg_rating,my_rating,my_shelves',
-              ),
-            )
-            as FlaskResponse;
+    Uri endpoint = flaskUri(
+      '/books',
+      queryParameters: {'id': widget.bookId},
+      addProps: ['avg_rating', 'my_rating', 'my_shelves'],
+    );
+
+    final r = await flaskGet(endpoint);
     if (r.isOk) {
       return (r.data['books'] as List)
           .map((book) => Book.fromJson(book as Map<String, dynamic>))
@@ -44,10 +43,13 @@ class _BookPageState extends State<BookPage> {
   }
 
   Future<List<Review>> fetchReviews() async {
-    final url = Uri.parse(
-      '$flaskServer/reviews?book_id=${widget.bookId}&expand=user',
+    Uri endpoint = flaskUri(
+      '/reviews',
+      queryParameters: {'book_id': widget.bookId},
+      expand: ['user'],
     );
-    final r = await client.get(url) as FlaskResponse;
+
+    final r = await flaskGet(endpoint);
     if (r.isOk) {
       return (r.data['reviews'] as List)
           .map((review) => Review.fromJson(review as Map<String, dynamic>))
@@ -69,7 +71,11 @@ class _BookPageState extends State<BookPage> {
               book.cover,
               SizedBox(height: kPadding),
               // TODO myShelves should hold ONLY one of want to read, currently reading, read
-              Text(book.myShelves!.first.name),
+              Text(
+                book.myShelves.isNotEmpty
+                    ? book.myShelves.first.name
+                    : 'unshelved',
+              ),
               SizedBox(height: kPadding),
               // TODO myRating as stars
               Text(

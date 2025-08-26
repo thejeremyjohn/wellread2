@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wellread2frontend/flask_util/flask_constants.dart';
-import 'package:wellread2frontend/flask_util/flask_response.dart';
+import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
 
@@ -24,8 +23,7 @@ class _BooksPageState extends State<BooksPage> {
   }
 
   Future<List<Book>> fetchBooks() async {
-    final r =
-        await client.get(Uri.parse('$flaskServer/books')) as FlaskResponse;
+    final r = await flaskGet(flaskUri('/books'));
     if (r.isOk) {
       return (r.data['books'] as List)
           .map((book) => Book.fromJson(book as Map<String, dynamic>))
