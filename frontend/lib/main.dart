@@ -33,12 +33,13 @@ class _MyAppState extends State<MyApp> {
           path: '/login',
           redirect: (context, state) async =>
               await isLoggedIn() ? '/books' : null,
-          builder: (context, state) => const LoginPage(),
+          builder: (context, state) => SelectionArea(child: const LoginPage()),
         ),
         ShellRoute(
           navigatorKey: kShellNavKey,
-          builder: (context, state, child) =>
-              Scaffold(appBar: WellreadAppBar(), body: child),
+          builder: (context, state, child) => SelectionArea(
+            child: Scaffold(appBar: WellreadAppBar(), body: child),
+          ),
           routes: <RouteBase>[
             GoRoute(
               path: '/books',
