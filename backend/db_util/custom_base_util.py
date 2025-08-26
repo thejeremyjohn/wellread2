@@ -19,12 +19,13 @@ class DBModel(Base):
 
     def __init__(self, *args, **kwargs):
         assert not kwargs.get('id'), "'id' cannot be manually set"
-        # assert not kwargs.get('uuid'), "'uuid' cannot be manually set" # TODO reapply
         super().__init__(*args, **kwargs)
 
     def attrs_(self, expand=[], adhoc_expandables={}, add_props=[]):
         attrs = {c.name: getattr(self, c.name) for c in self.__table__.columns}  # json serializable
         expandables = self.get_expandables(adhoc_expandables=adhoc_expandables)
+
+        # TODO handle expand and add_props together dynamically?
 
         for expansions in [e.split('.') for e in expand if e]:
             assert len(expansions) <= 4, "expansions have a max depth of 4 levels"

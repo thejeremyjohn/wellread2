@@ -176,14 +176,27 @@ class Book(DBModel):
     images = property(**images())
 
     @property
-    def _reviews(self):
+    def _reviews(self):  # for add_props
         return [r.attrs for r in self.reviews]
+
+    @property
+    def n_reviews(self):  # for add_props
+        return (Review.query
+                .filter(Review.book_id == self.id,
+                        Review.review != None)
+                .count())
+
+    @property
+    def n_ratings(self):  # for add_props
+        return (Review.query
+                .filter(Review.book_id == self.id,
+                        Review.rating != None)
+                .count())
 
     @property
     def avg_rating(self):  # for add_props
         return (Review.query
-                .join(Book)
-                .filter(Book.id == self.id)
+                .filter(Review.book_id == self.id)
                 .with_entities(zero_if_null(
                     db.func.avg(Review.rating).cast(db.DOUBLE_PRECISION)
                 )).scalar())
@@ -305,10 +318,6 @@ class User(DBModel):
         return attrs
     attrs = property(attrs_)
 
-    @property
-    def _bookshelves(self):
-        return [b.attrs for b in self.bookshelves]
-
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
@@ -342,6 +351,17 @@ class User(DBModel):
 
     def create_refresh_token(self, **kwargs):
         return create_refresh_token(identity=str(self.id), **kwargs)
+
+    @property
+    def _bookshelves(self):   # for add_props
+        return [b.attrs for b in self.bookshelves]
+
+    @property
+    def n_reviews(self):  # for add_props
+        return (Review.query
+                .filter(Review.user_id == self.id,
+                        Review.review != None)
+                .count())
 
 
 def zero_if_null(n):
