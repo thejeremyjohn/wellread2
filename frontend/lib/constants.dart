@@ -13,3 +13,5 @@ const storage = FlutterSecureStorage();
 const kPadding = 16.0;
 
 const kPerPage = 20;
+
+Color kGreen = Colors.green.shade800;

@@ -3,8 +3,11 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
+import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/review.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
+import 'package:wellread2frontend/widgets/clickable.dart';
+import 'package:wellread2frontend/widgets/underline.dart';
 
 class BookPage extends StatefulWidget {
   const BookPage({super.key, required this.bookId});
@@ -49,6 +52,7 @@ class _BookPageState extends State<BookPage> {
       '/reviews',
       queryParameters: {'book_id': widget.bookId},
       expand: ['user'],
+      addProps: ['shelves'],
     );
 
     final r = await flaskGet(endpoint);
@@ -76,9 +80,7 @@ class _BookPageState extends State<BookPage> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(
-                    Colors.green.shade800,
-                  ),
+                  backgroundColor: WidgetStateProperty.all(kGreen),
                 ),
                 onPressed: () {
                   // TODO open dialog to change shelf OR 'want to read' if unshelved
@@ -234,7 +236,10 @@ class ReviewWidget extends StatelessWidget {
           flex: 1,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [Text(review.user!.firstName), Text(review.user!.email)],
+            children: [
+              CircleAvatar(child: Icon(Icons.person)),
+              Text(review.user!.fullName),
+            ],
           ),
         ),
         SizedBox(width: kPadding),
@@ -245,6 +250,28 @@ class ReviewWidget extends StatelessWidget {
             children: [
               Text(review.rating.toString()),
               Text(review.review, softWrap: true, maxLines: 5),
+              Row(
+                spacing: kPadding * 0.75,
+                children: [
+                  for (Bookshelf shelf in review.tags)
+                    Clickable(
+                      onClick: () {
+                        // TODO goto ShelfPage
+                      },
+                      child: Underline(
+                        underlineColor: kGreen,
+                        text: Text(
+                          shelf.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              SizedBox(height: kPadding),
             ],
           ),
         ),
