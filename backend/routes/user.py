@@ -6,9 +6,6 @@ from backend.app import app, db, User, Bookshelf
 @app.route('/signup', methods=['POST'])
 def signup():
     user = User(**request.params)
-    user.bookshelves = [
-        Bookshelf(name=name, can_delete=False) for name in Bookshelf.ESSENTIALS
-    ]
     db.session.add(user)
     db.session.commit()
 

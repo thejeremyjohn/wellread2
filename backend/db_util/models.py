@@ -315,9 +315,10 @@ class Review(DBModel):
         bookshelves = (
             Bookshelf.query
             .join(BookBookshelf)
-            .join(Review, Review.book_id == BookBookshelf.book_id)
-            .filter(Review.book_id == self.book_id, Review.user_id == self.user_id)
-            # .filter(Bookshelf.name.notin_(Bookshelf.ESSENTIALS))
+            .join(Review, db.and_(Review.book_id == BookBookshelf.book_id,
+                                  Review.user_id == Bookshelf.user_id))
+            .filter(Review.book_id == self.book_id, Review.user_id == self.user_id,
+                    Bookshelf.name.notin_(Bookshelf.ESSENTIALS))
         )
         return [b.attrs for b in bookshelves]
 
@@ -337,6 +338,11 @@ class Review(DBModel):
 
 class User(DBModel):
     __tablename__ = 'users'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bookshelves = [Bookshelf(name=name, can_delete=False)
+                            for name in Bookshelf.ESSENTIALS]
 
     def attrs_(self, *args, **kwargs):
         attrs = super().attrs_(*args, **kwargs)

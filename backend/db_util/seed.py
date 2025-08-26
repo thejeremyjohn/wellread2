@@ -10,21 +10,21 @@ user2 = User(first_name='guest2', last_name='guesterson',
 user3 = User(first_name='guest3', last_name='guesterson',
              email='guest3@email.com', password='password')
 
-user1.bookshelves = [
-    Bookshelf(name='want to read', can_delete=False),
-    Bookshelf(name='currently reading', can_delete=False),
-    Bookshelf(name='read', can_delete=False),
-]
-user2.bookshelves = [
-    Bookshelf(name='want to read', can_delete=False),
-    Bookshelf(name='currently reading', can_delete=False),
-    Bookshelf(name='read', can_delete=False),
-]
-user3.bookshelves = [
-    Bookshelf(name='want to read', can_delete=False),
-    Bookshelf(name='currently reading', can_delete=False),
-    Bookshelf(name='read', can_delete=False),
-]
+user1.bookshelves.extend([
+    Bookshelf(name='scifi', can_delete=True),
+    Bookshelf(name='A little boring', can_delete=True),
+    Bookshelf(name='MyStErIoUs', can_delete=True),
+])
+user2.bookshelves.extend([
+    Bookshelf(name='mystery', can_delete=True),
+    Bookshelf(name='history', can_delete=True),
+    Bookshelf(name='sisterly', can_delete=True),
+])
+user3.bookshelves.extend([
+    Bookshelf(name='crime', can_delete=True),
+    Bookshelf(name='romance', can_delete=True),
+    Bookshelf(name='Science Fiction', can_delete=True),
+])
 
 book1 = Book(
     title='Book: The 1st',
@@ -44,14 +44,17 @@ book3 = Book(
 
 book_bookshelves = [
     BookBookshelf(book=book1, bookshelf=user1.bookshelves[0]),
-    BookBookshelf(book=book1, bookshelf=user1.bookshelves[1]),
-    BookBookshelf(book=book1, bookshelf=user1.bookshelves[2]),
-    BookBookshelf(book=book2, bookshelf=user2.bookshelves[0]),
+    BookBookshelf(book=book1, bookshelf=user1.bookshelves[3]),
+    BookBookshelf(book=book1, bookshelf=user2.bookshelves[4]),
+    BookBookshelf(book=book1, bookshelf=user3.bookshelves[5]),
     BookBookshelf(book=book2, bookshelf=user2.bookshelves[1]),
-    BookBookshelf(book=book2, bookshelf=user2.bookshelves[2]),
-    BookBookshelf(book=book3, bookshelf=user3.bookshelves[0]),
-    BookBookshelf(book=book3, bookshelf=user3.bookshelves[1]),
+    BookBookshelf(book=book2, bookshelf=user2.bookshelves[5]),
+    BookBookshelf(book=book2, bookshelf=user1.bookshelves[4]),
+    BookBookshelf(book=book2, bookshelf=user3.bookshelves[3]),
     BookBookshelf(book=book3, bookshelf=user3.bookshelves[2]),
+    BookBookshelf(book=book3, bookshelf=user3.bookshelves[4]),
+    BookBookshelf(book=book3, bookshelf=user1.bookshelves[5]),
+    BookBookshelf(book=book3, bookshelf=user2.bookshelves[3]),
 ]
 
 reviews = [
