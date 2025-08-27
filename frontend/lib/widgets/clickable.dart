@@ -8,8 +8,8 @@ class Clickable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
+    return DefaultSelectionStyle(
+      mouseCursor: SystemMouseCursors.click,
       child: GestureDetector(onTap: onClick, child: child),
     );
   }

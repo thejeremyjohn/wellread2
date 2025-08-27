@@ -51,8 +51,7 @@ class _BookPageState extends State<BookPage> {
     Uri endpoint = flaskUri(
       '/reviews',
       queryParameters: {'book_id': widget.bookId},
-      expand: ['user'],
-      addProps: ['shelves'],
+      addProps: ['shelves', 'user_'],
     );
 
     final r = await flaskGet(endpoint);
@@ -171,6 +170,7 @@ class _BookPageState extends State<BookPage> {
         List<Review> reviews = awaitedData;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: kPadding,
           children: [
             Text(
               'Community Reviews:',
@@ -231,6 +231,12 @@ class ReviewWidget extends StatelessWidget {
             children: [
               CircleAvatar(child: Icon(Icons.person)),
               Text(review.user!.fullName),
+              Text(
+                '${review.user!.nReviews!} reviews',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall!.copyWith(color: Colors.grey),
+              ),
             ],
           ),
         ),
@@ -240,7 +246,14 @@ class ReviewWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(review.rating.toString()),
+              RatingBar.builder(
+                initialRating: review.rating.toDouble(),
+                itemSize: Theme.of(context).textTheme.bodyLarge!.fontSize!,
+                itemBuilder: (context, idx) =>
+                    Icon(Icons.star, color: Colors.amber),
+                onRatingUpdate: (rating) {},
+                ignoreGestures: true,
+              ),
               Text(review.review, softWrap: true, maxLines: 5),
               Row(
                 spacing: kPadding * 0.75,
@@ -254,16 +267,12 @@ class ReviewWidget extends StatelessWidget {
                         underlineColor: kGreen,
                         text: Text(
                           shelf.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
                 ],
               ),
-              SizedBox(height: kPadding),
             ],
           ),
         ),

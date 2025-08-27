@@ -26,7 +26,12 @@ class Review {
       rating = json['rating'] as int,
       review = json['review'] as String,
 
-      user = json.containsKey('user') ? User.fromJson(json['user']) : null,
+      user =
+          json.containsKey('user') // via expand=user
+          ? User.fromJson(json['user'])
+          : json.containsKey('user_') // via add_props=user_
+          ? User.fromJson(json['user_'])
+          : null,
       shelves = json.containsKey('shelves')
           ? (json['shelves'] as List)
                 .map((shelf) => Bookshelf.fromJson(shelf))
