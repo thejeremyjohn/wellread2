@@ -6,44 +6,32 @@ class Review {
   final int userId;
   final int rating;
   final String review;
+
   final User? user;
-  final List<Bookshelf> shelves;
+  final List<Bookshelf>? shelves;
 
   Review({
     required this.bookId,
     required this.userId,
     required this.rating,
     required this.review,
+
     this.user,
-    this.shelves = const [],
+    this.shelves,
   });
 
-  factory Review.fromJson(Map<String, dynamic> json) {
-    User? user = json.containsKey('user') ? User.fromJson(json['user']) : null;
-    List<Bookshelf> shelves = json.containsKey('shelves')
-        ? (json['shelves'] as List)
-              .map((shelf) => Bookshelf.fromJson(shelf))
-              .toList()
-        : [];
+  Review.fromJson(Map<String, dynamic> json)
+    : bookId = json['book_id'] as int,
+      userId = json['user_id'] as int,
+      rating = json['rating'] as int,
+      review = json['review'] as String,
 
-    return switch (json) {
-      {
-        'book_id': int bookId,
-        'user_id': int userId,
-        'rating': int rating,
-        'review': String review,
-      } =>
-        Review(
-          bookId: bookId,
-          userId: userId,
-          rating: rating,
-          review: review,
-          user: user,
-          shelves: shelves,
-        ),
-      _ => throw const FormatException('Failed to load Review.'),
-    };
-  }
+      user = json.containsKey('user') ? User.fromJson(json['user']) : null,
+      shelves = json.containsKey('shelves')
+          ? (json['shelves'] as List)
+                .map((shelf) => Bookshelf.fromJson(shelf))
+                .toList()
+          : [];
 
-  List<Bookshelf> get tags => shelves;
+  List<Bookshelf>? get tags => shelves;
 }

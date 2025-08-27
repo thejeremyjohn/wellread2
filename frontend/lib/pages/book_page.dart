@@ -86,8 +86,8 @@ class _BookPageState extends State<BookPage> {
                   // TODO open dialog to change shelf OR 'want to read' if unshelved
                 },
                 child: Text(
-                  book.myShelves.isNotEmpty
-                      ? book.myShelves.first.name
+                  book.myShelves!.isNotEmpty
+                      ? book.myShelves!.first.name
                       : 'unshelved',
                 ),
               ),
@@ -102,8 +102,8 @@ class _BookPageState extends State<BookPage> {
                   Icon(Icons.star, color: Colors.amber),
               onRatingUpdate: (rating) {
                 // TODO review_update
-                book.myRating = rating;
-                setState(() {});
+                // book.myRating = rating;
+                // setState(() {});
               },
             ),
             Text('Rate this book'),
@@ -182,14 +182,6 @@ class _BookPageState extends State<BookPage> {
             for (Review review in reviews) ReviewWidget(review: review),
             for (Review review in reviews) ReviewWidget(review: review),
             for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
           ],
         );
       },
@@ -253,7 +245,7 @@ class ReviewWidget extends StatelessWidget {
               Row(
                 spacing: kPadding * 0.75,
                 children: [
-                  for (Bookshelf shelf in review.tags)
+                  for (Bookshelf shelf in review.tags!)
                     Clickable(
                       onClick: () {
                         // TODO goto ShelfPage

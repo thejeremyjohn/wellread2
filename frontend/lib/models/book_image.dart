@@ -4,13 +4,7 @@ class BookImage {
 
   BookImage({required this.url, required this.uuid});
 
-  factory BookImage.fromJson(Map<String, dynamic> json) {
-    return switch (json) {
-      {'url': String url, 'uuid': String uuid} => BookImage(
-        uuid: uuid,
-        url: url,
-      ),
-      _ => throw const FormatException('Failed to load BookImage.'),
-    };
-  }
+  BookImage.fromJson(Map<String, dynamic> json)
+    : url = json['url'] as String,
+      uuid = json['uuid'] as String;
 }

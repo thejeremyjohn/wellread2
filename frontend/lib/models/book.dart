@@ -9,55 +9,42 @@ class Book {
   final String? description;
   final List<BookImage> images;
 
-  double? myRating;
-  double? avgRating;
-  List<Bookshelf> myShelves;
+  final double? myRating;
+  final double? avgRating;
+  final List<Bookshelf>? myShelves;
 
   Book({
     required this.id,
     required this.title,
     required this.author,
-    this.description,
+    required this.description,
     required this.images,
+
     this.myRating,
     this.avgRating,
-    this.myShelves = const [],
+    this.myShelves,
   });
 
-  factory Book.fromJson(Map<String, dynamic> json) {
-    double? myRating = json.containsKey('my_rating') ? json['my_rating'] : 0.0;
-    double? avgRating = json.containsKey('avg_rating')
-        ? json['avg_rating']
-        : 0.0;
-    List<Bookshelf> myShelves = json.containsKey('my_shelves')
-        ? (json['my_shelves'] as List)
-              .map((shelf) => Bookshelf.fromJson(shelf))
-              .toList()
-        : [];
+  Book.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      title = json['title'] as String,
+      author = json['author'] as String,
+      description = (json['description'] ?? '') as String,
+      images = (json['images'] as List)
+          .map((i) => BookImage.fromJson(i as Map<String, dynamic>))
+          .toList(),
 
-    return switch (json) {
-      {
-        'id': int id,
-        'title': String title,
-        'author': String author,
-        'description': String description,
-        'images': List images,
-      } =>
-        Book(
-          id: id,
-          title: title,
-          author: author,
-          description: description,
-          images: images
-              .map((i) => BookImage.fromJson(i as Map<String, dynamic>))
-              .toList(),
-          myRating: myRating,
-          avgRating: avgRating,
-          myShelves: myShelves,
-        ),
-      _ => throw const FormatException('Failed to load book.'),
-    };
-  }
+      myRating = json.containsKey('my_rating')
+          ? json['my_rating'] as double
+          : 0.0,
+      avgRating = json.containsKey('avg_rating')
+          ? json['avg_rating'] as double
+          : 0.0,
+      myShelves = json.containsKey('my_shelves')
+          ? (json['my_shelves'] as List)
+                .map((shelf) => Bookshelf.fromJson(shelf))
+                .toList()
+          : [];
 
   Image get cover128p => images.isEmpty
       ? Image.asset(width: 128, 'images/no-cover.png')

@@ -1,33 +1,21 @@
 class User {
   final int id;
   final String firstName;
-  final String? lastName;
+  final String lastName;
   final String email;
 
   User({
     required this.id,
     required this.firstName,
-    this.lastName,
+    required this.lastName,
     required this.email,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return switch (json) {
-      {
-        'id': int id,
-        'first_name': String firstName,
-        'last_name': String? lastName,
-        'email': String email,
-      } =>
-        User(
-          id: id,
-          firstName: firstName,
-          lastName: lastName ?? '',
-          email: email,
-        ),
-      _ => throw const FormatException('Failed to load User.'),
-    };
-  }
+  User.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      firstName = json['first_name'] as String,
+      lastName = (json['last_name'] ?? '') as String,
+      email = json['email'] as String;
 
   String get fullName => '$firstName $lastName'.trim();
 }
