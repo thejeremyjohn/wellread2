@@ -254,7 +254,7 @@ class ReviewWidget extends StatelessWidget {
                 onRatingUpdate: (rating) {},
                 ignoreGestures: true,
               ),
-              Text(review.review, softWrap: true, maxLines: 5),
+              Text(review.content, softWrap: true, maxLines: 5),
               Row(
                 spacing: kPadding * 0.75,
                 children: [

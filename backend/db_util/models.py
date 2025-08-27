@@ -183,14 +183,13 @@ class Book(DBModel):
     def n_reviews(self):  # for add_props
         return (Review.query
                 .filter(Review.book_id == self.id,
-                        Review.review != None)
+                        Review.content != None)
                 .count())
 
     @property
     def n_ratings(self):  # for add_props
         return (Review.query
-                .filter(Review.book_id == self.id,
-                        Review.rating != None)
+                .filter(Review.book_id == self.id)
                 .count())
 
     @property
@@ -329,7 +328,7 @@ class Review(DBModel):
     @property
     def user_(self):  # for add_props
         ''' special-case alternative to expand=user '''
-        u = self.user
+        u: User = self.user
         return {
             **u.attrs,
             'n_reviews': u.n_reviews,
@@ -392,7 +391,7 @@ class User(DBModel):
     def n_reviews(self):  # for add_props
         return (Review.query
                 .filter(Review.user_id == self.id,
-                        Review.review != None)
+                        Review.content != None)
                 .count())
 
 

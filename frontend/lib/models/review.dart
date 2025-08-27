@@ -5,7 +5,7 @@ class Review {
   final int bookId;
   final int userId;
   final int rating;
-  final String review;
+  final String content;
 
   final User? user;
   final List<Bookshelf>? shelves;
@@ -14,7 +14,7 @@ class Review {
     required this.bookId,
     required this.userId,
     required this.rating,
-    required this.review,
+    required this.content,
 
     this.user,
     this.shelves,
@@ -24,7 +24,7 @@ class Review {
     : bookId = json['book_id'] as int,
       userId = json['user_id'] as int,
       rating = json['rating'] as int,
-      review = json['review'] as String,
+      content = json['content'] as String,
 
       user =
           json.containsKey('user') // via expand=user
