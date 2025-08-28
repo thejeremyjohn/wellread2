@@ -180,8 +180,6 @@ class _BookPageState extends State<BookPage> {
               ),
             ),
             for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
-            for (Review review in reviews) ReviewWidget(review: review),
           ],
         );
       },
@@ -254,7 +252,7 @@ class ReviewWidget extends StatelessWidget {
                 onRatingUpdate: (rating) {},
                 ignoreGestures: true,
               ),
-              Text(review.content, softWrap: true, maxLines: 5),
+              Text(review.content ?? '', softWrap: true, maxLines: 5),
               Row(
                 spacing: kPadding * 0.75,
                 children: [
