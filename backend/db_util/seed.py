@@ -1,7 +1,11 @@
 ''' USAGE: (from [project_root]/backend) python db_util/seed.py
 '''
+from faker import Faker
 import sys; sys.path.append('../')
 from backend.app import app, db, User, Book, Bookshelf, BookBookshelf, Review
+
+fake = Faker()
+
 
 user1 = User(first_name='guest1', last_name='guesterson',
              email='guest1@email.com', password='password')
@@ -9,22 +13,30 @@ user2 = User(first_name='guest2', last_name='guesterson',
              email='guest2@email.com', password='password')
 user3 = User(first_name='guest3', last_name='guesterson',
              email='guest3@email.com', password='password')
+users = [user1, user2, user3]
 
-user1.bookshelves.extend([
-    Bookshelf(name='scifi', can_delete=True),
-    Bookshelf(name='A little boring', can_delete=True),
-    Bookshelf(name='MyStErIoUs', can_delete=True),
-])
-user2.bookshelves.extend([
-    Bookshelf(name='mystery', can_delete=True),
-    Bookshelf(name='history', can_delete=True),
-    Bookshelf(name='sisterly', can_delete=True),
-])
-user3.bookshelves.extend([
-    Bookshelf(name='crime', can_delete=True),
-    Bookshelf(name='romance', can_delete=True),
-    Bookshelf(name='Science Fiction', can_delete=True),
-])
+
+def random_user() -> User:
+    return User(
+        first_name=fake.first_name(),
+        last_name=fake.last_name(),
+        email=fake.profile(fields=['mail'])['mail'],
+        password=fake.password()
+    )
+
+
+def random_bookshelves() -> list[Bookshelf]:
+    ''' generate between 0 and 10 bookshelves/tags with adjective names '''
+    return [
+        Bookshelf(name=name, can_delete=True) for name in
+        fake.words(nb=fake.random.randint(0, 10), part_of_speech='adjective', unique=True)
+    ]
+
+
+for _ in range(fake.random.randint(10, 100)):
+    users.append(random_user())
+for user in users:
+    user.bookshelves.extend(random_bookshelves())
 
 book1 = Book(
     title='Book: The 1st',
@@ -41,46 +53,47 @@ book3 = Book(
     author='Peter Jordensen',
     description='It isn\'t easy being green. Bloody hell! And it isn\'t obvious that being addicted to benzos will do that to ya. But, there you go.'
 )
+books = [book1, book2, book3]
 
-book_bookshelves = [
-    BookBookshelf(book=book1, bookshelf=user1.bookshelves[0]),
-    BookBookshelf(book=book1, bookshelf=user1.bookshelves[3]),
-    BookBookshelf(book=book1, bookshelf=user2.bookshelves[4]),
-    BookBookshelf(book=book1, bookshelf=user3.bookshelves[5]),
-    BookBookshelf(book=book2, bookshelf=user2.bookshelves[1]),
-    BookBookshelf(book=book2, bookshelf=user2.bookshelves[5]),
-    BookBookshelf(book=book2, bookshelf=user1.bookshelves[4]),
-    BookBookshelf(book=book2, bookshelf=user3.bookshelves[3]),
-    BookBookshelf(book=book3, bookshelf=user3.bookshelves[2]),
-    BookBookshelf(book=book3, bookshelf=user3.bookshelves[4]),
-    BookBookshelf(book=book3, bookshelf=user1.bookshelves[5]),
-    BookBookshelf(book=book3, bookshelf=user2.bookshelves[3]),
-]
+for _ in range(fake.random.randint(5, 50)):
+    books.append(
+        Book(
+            title=fake.sentence(nb_words=fake.random.randint(1, 5)).rstrip('.'),
+            author=fake.name(),
+            description=fake.paragraph(nb_sentences=fake.random.randint(1, 5),
+                                       variable_nb_sentences=True)
+        )
+    )
 
-reviews = [
-    Review(book=book1, user=user1, rating=5,
-           review='This book is the best book ever written. I love it!'),
-    Review(book=book1, user=user2, rating=4,
-           review='A fascinating read, but not without its flaws.'),
-    Review(book=book1, user=user3, rating=3,
-           review='It had some interesting ideas, but the execution was lacking.'),
-    Review(book=book2, user=user1, rating=2,
-           review='I expected more from this author. It was a bit disappointing.'),
-    Review(book=book2, user=user2, rating=1,
-           review='Did not enjoy this book at all. Would not recommend.'),
-    Review(book=book2, user=user3, rating=4,
-           review='A decent read, but not my favorite. Still worth checking out.'),
-    Review(book=book3, user=user1, rating=5,
-           review='An absolute masterpiece! A must-read for everyone.'),
-    Review(book=book3, user=user2, rating=4,
-           review='A thrilling conclusion to the series. Highly recommend!'),
-    Review(book=book3, user=user3, rating=3,
-           review='It was okay, but I expected more from the final book in the series.'),
-]
+books_bookshelves = []
+reviews = []
+for user in users:
+    for book in books:
+        essentials = [None] + [s for s in user.bookshelves if not s.can_delete]
+        bookshelf = fake.random.choice(essentials)
+        if bookshelf:
+            books_bookshelves.append(
+                BookBookshelf(book=book, bookshelf=bookshelf)
+            )
+            if bookshelf.name == 'read':
+                reviews.append(
+                    Review(book=book, user=user,
+                           rating=fake.random.randint(1, 5),
+                           content=fake.random.choice(
+                               [None, fake.paragraph(variable_nb_sentences=True)]
+                           ))
+                )
+            tags = [None] + [s for s in user.bookshelves if s.can_delete]
+            for tag in fake.random.sample(tags, k=fake.random.randint(1, len(tags))):
+                if tag:
+                    books_bookshelves.append(
+                        BookBookshelf(book=book, bookshelf=tag)
+                    )
+
 
 with app.app_context():
-    db.session.add_all([user1, user2, user3])
-    db.session.add_all([book1, book2, book3])
-    db.session.add_all(book_bookshelves)
+    db.session.add_all(users)
+    db.session.add_all(books)
+    db.session.add_all(books_bookshelves)
     db.session.add_all(reviews)
     db.session.commit()
