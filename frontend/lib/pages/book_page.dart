@@ -43,7 +43,7 @@ class _BookPageState extends State<BookPage> {
           .map((book) => Book.fromJson(book as Map<String, dynamic>))
           .first;
     } else {
-      throw Exception('Failed to load books');
+      throw Exception(r.error);
     }
   }
 
@@ -60,7 +60,7 @@ class _BookPageState extends State<BookPage> {
           .map((review) => Review.fromJson(review as Map<String, dynamic>))
           .toList();
     } else {
-      throw Exception('Failed to load reviews');
+      throw Exception(r.error);
     }
   }
 
