@@ -34,7 +34,13 @@ class _BookPageState extends State<BookPage> {
     Uri endpoint = flaskUri(
       '/books',
       queryParameters: {'id': widget.bookId},
-      addProps: ['avg_rating', 'my_rating', 'my_shelves'],
+      addProps: [
+        'avg_rating',
+        'my_rating',
+        'my_shelves',
+        'n_reviews',
+        'n_ratings',
+      ],
     );
 
     final r = await flaskGet(endpoint);
@@ -147,13 +153,19 @@ class _BookPageState extends State<BookPage> {
                 ),
                 SizedBox(width: kPadding),
                 Text(
-                  book.avgRating!.toString(),
+                  book.avgRatingString!,
                   style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                     fontFamily: 'LibreBaskerville',
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                // TODO show n_ratings, n_reviews
+                SizedBox(width: kPadding),
+                Text(
+                  '${book.nReviews!} reviews · ${book.nRatings!} ratings',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall!.copyWith(color: Colors.grey),
+                ),
               ],
             ),
             SizedBox(height: kPadding),

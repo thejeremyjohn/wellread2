@@ -21,9 +21,7 @@ class User {
       lastName = (json['last_name'] ?? '') as String,
       email = json['email'] as String,
 
-      nReviews = json.containsKey('n_reviews')
-          ? json['n_reviews'] as int
-          : null;
+      nReviews = json['n_reviews'] as int?;
 
   String get fullName => '$firstName $lastName'.trim();
 }

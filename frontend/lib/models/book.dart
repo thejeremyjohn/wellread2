@@ -12,6 +12,8 @@ class Book {
   final double? myRating;
   final double? avgRating;
   final List<Bookshelf>? myShelves;
+  final int? nReviews;
+  final int? nRatings;
 
   Book({
     required this.id,
@@ -23,6 +25,8 @@ class Book {
     this.myRating,
     this.avgRating,
     this.myShelves,
+    this.nReviews,
+    this.nRatings,
   });
 
   Book.fromJson(Map<String, dynamic> json)
@@ -34,17 +38,15 @@ class Book {
           .map((i) => BookImage.fromJson(i as Map<String, dynamic>))
           .toList(),
 
-      myRating = json.containsKey('my_rating')
-          ? json['my_rating'] as double
-          : 0.0,
-      avgRating = json.containsKey('avg_rating')
-          ? json['avg_rating'] as double
-          : 0.0,
+      myRating = json['my_rating'] as double?,
+      avgRating = json['avg_rating'] as double?,
       myShelves = json.containsKey('my_shelves')
           ? (json['my_shelves'] as List)
                 .map((shelf) => Bookshelf.fromJson(shelf))
                 .toList()
-          : [];
+          : [],
+      nReviews = json['n_reviews'] as int?,
+      nRatings = json['n_ratings'] as int?;
 
   Image get cover128p => images.isEmpty
       ? Image.asset(width: 128, 'images/no-cover.png')
@@ -52,4 +54,5 @@ class Book {
   Image get cover => images.isEmpty
       ? Image.asset('images/no-cover.png')
       : Image.network(images.first.url);
+  String? get avgRatingString => avgRating?.toStringAsFixed(2);
 }
