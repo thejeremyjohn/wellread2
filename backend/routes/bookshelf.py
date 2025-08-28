@@ -73,20 +73,17 @@ def bookshelf_update(bookshelf_id: int):
     })
 
 
-@app.route('/bookshelf/<bookshelf_id>/book/<book_id>', methods=['POST', 'DELETE'])
+@app.route('/bookshelf/<int:bookshelf_id>/book/<int:book_id>', methods=['POST', 'DELETE'])
 @jwt_required()
 def bookshelf_add_or_remove_book(bookshelf_id: int, book_id: int):
-    bookshelf = Bookshelf.query.get(bookshelf_id)
+    bookshelf: Bookshelf = Bookshelf.query.get(bookshelf_id)
     assert bookshelf and bookshelf.user_id == current_user.id, \
         f"bookshelf not found with {bookshelf_id=}, user_id={current_user.id}"
 
     if request.method == 'POST':  # def bookshelf_add_book
-        book_bookshelf = BookBookshelf(book_id=book_id, bookshelf=bookshelf)
-        db.session.add(book_bookshelf)
+        bookshelf.add_book(book_id)
     else:  # 'DELETE': def bookshelf_remove_book
-        book_bookshelf = BookBookshelf.query.filter(
-            book_id == book_id, bookshelf == bookshelf).one()
-        db.session.delete(book_bookshelf)
+        bookshelf.remove_book(book_id)
     db.session.commit()
 
     return jsonify({

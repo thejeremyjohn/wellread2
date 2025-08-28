@@ -90,7 +90,7 @@ class CloudfrontMixin():
     def get_mimetype_agnostic_url(self, s3_key,
                                   policy=None,
                                   cloudfront_url=app.config['CLOUDFRONT_URL_GENERIC'],
-                                  params={}):  # TODO why passing params?
+                                  params={}):
         return CloudfrontMixin.generate_presigned_url(
             s3_key,
             policy=policy,
@@ -277,7 +277,7 @@ class BookBookshelf(DBModel):
 class Bookshelf(DBModel):
     __tablename__ = 'bookshelves'
 
-    ESSENTIALS = ['want to read', 'currently reading', 'read']
+    ESSENTIALS = ['want to read', 'currently reading', 'read']  # and .can_delete=False
 
     def attrs_(self, expand=[], add_props=[]):
         attrs = super().attrs_(expand=expand, add_props=add_props)
@@ -300,6 +300,47 @@ class Bookshelf(DBModel):
     @property
     def n_books(self):  # for add_props
         return self._books.count()
+
+    def book_is_in_users_essential_shelves(self, book_id: int):
+        return (
+            Bookshelf.query
+            .join(Bookshelf._books)
+            # where the given book is in this bookshelf.user's essential shelves
+            .filter(
+                Bookshelf.can_delete == False,
+                Bookshelf.user_id == self.user_id,
+                Book.id == book_id)
+            .with_entities(db.exists(Book))
+            .scalar()
+        )
+
+    def add_book(self, book_id: int):
+        is_shelved = self.book_is_in_users_essential_shelves(book_id)
+
+        if self.name in Bookshelf.ESSENTIALS:
+            assert not is_shelved, f"book is already on one of your essential shelves"
+        else:
+            assert is_shelved, f"book must be added to one of your essential shelves first"
+
+        bb = BookBookshelf(book_id=book_id, bookshelf=self)
+        db.session.add(bb)
+
+    def remove_book(self, book_id: int):
+        if self.name in Bookshelf.ESSENTIALS:
+            if self.book_is_in_users_essential_shelves(book_id):
+                # remove book from every shelf of self.user
+                book_bookshelves = (
+                    BookBookshelf.query
+                    .join(Bookshelf)
+                    .filter(BookBookshelf.book_id == book_id, Bookshelf.user_id == self.user_id)
+                )
+                for bb in book_bookshelves:
+                    db.session.delete(bb)
+                # # TODO? delete self.user's review of this book
+                return
+
+        bb = BookBookshelf.query.get((book_id, self.id))
+        db.session.delete(bb)
 
 
 class Review(DBModel):
@@ -384,7 +425,7 @@ class User(DBModel):
         return create_refresh_token(identity=str(self.id), **kwargs)
 
     @property
-    def bookshelves_(self):   # for add_props
+    def shelves(self):   # for add_props
         return [b.attrs for b in self.bookshelves]
 
     @property
