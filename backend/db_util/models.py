@@ -8,6 +8,7 @@ from backend import util_functions
 from backend.db_util.custom_base_util import DBModel
 from flask import request
 from flask_jwt_extended import create_access_token, create_refresh_token, current_user
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import validates, relationship
 from sqlalchemy.sql.functions import func
 from uuid import uuid1
@@ -192,13 +193,24 @@ class Book(DBModel):
                 .filter(Review.book_id == self.id)
                 .count())
 
-    @property
-    def avg_rating(self):  # for add_props
-        return (Review.query
-                .filter(Review.book_id == self.id)
-                .with_entities(zero_if_null(
-                    db.func.avg(Review.rating).cast(db.DOUBLE_PRECISION)
-                )).scalar())
+    @hybrid_property
+    def avg_rating(self):
+        return db.session.execute(
+            db.select(zero_if_null(
+                db.func.avg(Review.rating).cast(db.DOUBLE_PRECISION)
+            ))
+            .where(Review.book_id == self.id)
+        ).scalar()
+
+    @avg_rating.expression
+    def avg_rating(cls):
+        return (
+            db.select(zero_if_null(
+                db.func.avg(Review.rating).cast(db.DOUBLE_PRECISION)
+            ))
+            .where(Review.book_id == cls.id)
+            .label('avg_rating')
+        )
 
     @property
     def my_review(self):  # for add_props
@@ -211,13 +223,35 @@ class Book(DBModel):
                   .one_or_none())
         return review.attrs if review else None
 
-    @property
-    def my_rating(self):  # for add_props
-        ''' current_user's review.rating of this book '''
+    @hybrid_property
+    def my_rating(self):
+        ''' current_user's review of this book '''
         if not request:
             raise Exception('cannot get `my_rating` outside of request context')
-        review = self.my_review
-        return review['rating'] if review else 0
+        return db.session.execute(
+            db.select(zero_if_null(
+                # `func.avg` here is being called on one value.
+                # its only purpose is to make `zero_if_null` work. TODO less hacky
+                db.func.avg(Review.rating).cast(db.INTEGER)
+            ))
+            .where(Review.book_id == self.id)
+            .where(Review.user_id == current_user.id)
+        ).scalar()
+
+    @my_rating.expression
+    def my_rating(cls):
+        if not request:
+            raise Exception('cannot get `my_rating` outside of request context')
+        return (
+            db.select(zero_if_null(
+                # `func.avg` here is being called on one value.
+                # its only purpose is to make `zero_if_null` work. TODO less hacky
+                db.func.avg(Review.rating).cast(db.INTEGER)
+            ))
+            .where(Review.book_id == cls.id)
+            .where(Review.user_id == current_user.id)
+            .label('my_rating')
+        )
 
     _shelves = relationship(
         'Bookshelf',
