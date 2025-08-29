@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
-import 'package:wellread2frontend/widgets/clickable.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key, this.page, this.orderBy, this.reverse});
@@ -49,15 +49,34 @@ class _BooksPageState extends State<BooksPage> {
     }
   }
 
+  List<String> columnLabels = [
+    // 'id',
+    'cover',
+    'title',
+    'author',
+    'avgRating',
+    'myRating',
+  ];
+
+  List<String?> orderBys = [
+    // 'id',
+    null, // 'cover',
+    'title',
+    'author',
+    'avg_rating',
+    'my_rating',
+  ];
+
   Future<List<Book>> fetchBooks() async {
     Uri endpoint = flaskUri(
       '/books',
       queryParameters: {
         'per_page': '20',
         'page': (_page + 1).toString(),
-        'order_by': _orderBy,
+        'order_by': orderBys[columnLabels.indexOf(_orderBy)],
         'reverse': _reverse.toString(),
       },
+      addProps: ['avg_rating', 'my_rating', 'my_shelves'],
     );
     final r = await flaskGet(endpoint);
     if (r.isOk) {
@@ -111,13 +130,6 @@ class _BooksPageState extends State<BooksPage> {
                     builder: (context, constraints) {
                       fetchUntilScrollable();
 
-                      List<String> columnLabels = [
-                        // 'id',
-                        'cover',
-                        'title',
-                        'author',
-                      ];
-
                       return SizedBox(
                         width: constraints.maxWidth,
                         child: DataTable(
@@ -126,12 +138,16 @@ class _BooksPageState extends State<BooksPage> {
                           showCheckboxColumn: false,
                           columns: List.generate(columnLabels.length, (index) {
                             String columnLabel = columnLabels[index];
+                            String? orderBy = orderBys[index];
 
                             return DataColumn(
+                              columnWidth: columnLabel != 'cover'
+                                  ? null
+                                  : FixedColumnWidth(128),
                               label: Text(
                                 columnLabel,
                                 style: TextStyle(
-                                  color: columnLabel != 'cover' ? kGreen : null,
+                                  color: orderBy is String ? kGreen : null,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -153,12 +169,27 @@ class _BooksPageState extends State<BooksPage> {
                                   context.go('/book/${book.id}'),
                               cells: [
                                 // DataCell(Text(book.id.toString())),
-                                DataCell(book.cover128p),
+                                DataCell(book.cover),
                                 DataCell(Text(book.title)),
                                 DataCell(
                                   Text(book.author),
                                   onTap: () =>
                                       print('`${book.author}` clicked'),
+                                ),
+                                DataCell(Text(book.avgRatingString!)),
+                                DataCell(
+                                  RatingBar.builder(
+                                    initialRating: book.myRating!,
+                                    minRating: 1,
+                                    itemSize: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium!.fontSize!,
+                                    itemBuilder: (context, idx) =>
+                                        Icon(Icons.star, color: Colors.amber),
+                                    onRatingUpdate: (rating) {
+                                      // TODO review_update
+                                    },
+                                  ),
                                 ),
                               ],
                             );
