@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
 import 'package:wellread2frontend/pages/book_page.dart';
@@ -8,6 +9,9 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
 void main() {
+  usePathUrlStrategy(); // remove '#' from paths
+  GoRouter.optionURLReflectsImperativeAPIs =
+      true; // ctx.push(...) updates path (same as ctx.go(...))
   runApp(const MyApp());
 }
 
@@ -43,7 +47,11 @@ class _MyAppState extends State<MyApp> {
           routes: <RouteBase>[
             GoRoute(
               path: '/books',
-              builder: (context, state) => const BooksPage(),
+              builder: (context, state) => BooksPage(
+                page: state.uri.queryParameters['page'],
+                orderBy: state.uri.queryParameters['orderBy'],
+                reverse: state.uri.queryParameters['reverse'],
+              ),
             ),
             GoRoute(
               path: '/book/:bookId',
@@ -54,7 +62,6 @@ class _MyAppState extends State<MyApp> {
         ),
       ],
     );
-
     super.initState();
   }
 
