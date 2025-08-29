@@ -7,7 +7,7 @@ import 'package:wellread2frontend/widgets/clickable.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key, this.page, this.orderBy, this.reverse});
-  final String? page;
+  final String? page; // TODO? remove page as it is not passed to goRoute path
   final String? orderBy;
   final String? reverse;
 
@@ -83,73 +83,95 @@ class _BooksPageState extends State<BooksPage> {
           _controller.hasClients &&
           _controller.position.hasContentDimensions &&
           _controller.position.maxScrollExtent == 0) {
-        fetchBooks();
+        fetchBooks(); // calls setState
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    List<Book> books = _books;
     return Scaffold(
-      body: SingleChildScrollView(
-        controller: _controller,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            fetchUntilScrollable();
+      body: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Container(
+              margin: EdgeInsets.all(kPadding),
+              child: Text('[My Shelves]', textAlign: TextAlign.center),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Container(
+              margin: EdgeInsets.all(kPadding),
+              child: ListView(
+                controller: _controller,
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      fetchUntilScrollable();
 
-            List<String> columnLabels = ['id', 'cover', 'title', 'author'];
+                      List<String> columnLabels = [
+                        // 'id',
+                        'cover',
+                        'title',
+                        'author',
+                      ];
 
-            return SizedBox(
-              width: constraints.maxWidth,
-              child: DataTable(
-                sortColumnIndex: columnLabels.indexOf(_orderBy),
-                sortAscending: !_reverse,
-                columns: List.generate(columnLabels.length, (index) {
-                  String columnLabel = columnLabels[index];
+                      return SizedBox(
+                        width: constraints.maxWidth,
+                        child: DataTable(
+                          sortColumnIndex: columnLabels.indexOf(_orderBy),
+                          sortAscending: !_reverse,
+                          showCheckboxColumn: false,
+                          columns: List.generate(columnLabels.length, (index) {
+                            String columnLabel = columnLabels[index];
 
-                  return DataColumn(
-                    label: Text(
-                      columnLabel,
-                      style: TextStyle(
-                        color: columnLabel != 'cover' ? kGreen : null,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onSort: (_, __) {
-                      // if column is already sorted, reverse sorting, else sort asc
-                      _reverse = _orderBy == columnLabel ? !_reverse : false;
-                      // push a new page, reload all books
-                      context.push(
-                        '/books?orderBy=$columnLabel&reverse=$_reverse',
+                            return DataColumn(
+                              label: Text(
+                                columnLabel,
+                                style: TextStyle(
+                                  color: columnLabel != 'cover' ? kGreen : null,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onSort: (_, __) {
+                                // if column is already sorted, reverse sorting, else sort asc
+                                _reverse = columnLabel == _orderBy
+                                    ? !_reverse
+                                    : false;
+                                // push a new page, reload all books
+                                context.push(
+                                  '/books?orderBy=$columnLabel&reverse=$_reverse',
+                                );
+                              },
+                            );
+                          }),
+                          rows: _books.map((Book book) {
+                            return DataRow(
+                              onSelectChanged: (value) =>
+                                  context.go('/book/${book.id}'),
+                              cells: [
+                                // DataCell(Text(book.id.toString())),
+                                DataCell(book.cover128p),
+                                DataCell(Text(book.title)),
+                                DataCell(
+                                  Text(book.author),
+                                  onTap: () =>
+                                      print('`${book.author}` clicked'),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       );
                     },
-                  );
-                }),
-                rows: books.map((Book book) {
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(book.id.toString())),
-                      DataCell(
-                        Clickable(
-                          onClick: () => context.go('/book/${book.id}'),
-                          child: book.cover128p,
-                        ),
-                      ),
-                      DataCell(
-                        Clickable(
-                          onClick: () => context.go('/book/${book.id}'),
-                          child: Text(book.title),
-                        ),
-                      ),
-                      DataCell(Text(book.author)),
-                    ],
-                  );
-                }).toList(),
+                  ),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
