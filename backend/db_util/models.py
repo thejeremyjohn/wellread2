@@ -2,6 +2,7 @@ import base64
 import boto3
 import concurrent.futures
 import json
+import secrets
 
 from backend.app import app, db
 from backend import util_functions
@@ -452,6 +453,14 @@ class User(DBModel):
         return locals()
     password = property(**password())
 
+    def receive_email(self, *args, **kwargs):
+        kwargs['from_address'] = 'noreply-wellread@jeremyjohn.me'
+        util_functions.send_raw_email([self.email], *args, **kwargs)
+
+    @property
+    def verified(self):
+        return PendingUserVerification.query.filter_by(user_id=self.id).count() == 0
+
     def create_access_token(self, **kwargs):
         return create_access_token(identity=str(self.id), **kwargs)
 
@@ -468,6 +477,16 @@ class User(DBModel):
                 .filter(Review.user_id == self.id,
                         Review.content != None)
                 .count())
+
+
+class PendingUserVerification(DBModel):
+    __tablename__ = 'pending_user_verifications'
+
+    user = relationship('User', uselist=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.token = secrets.token_urlsafe(32)
 
 
 def zero_if_null(n):
