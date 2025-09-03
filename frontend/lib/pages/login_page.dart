@@ -1,6 +1,7 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:wellread2frontend/flask_util/flask_response.dart';
+import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
 
 class LoginPage extends StatefulWidget {
@@ -26,78 +27,106 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: const EdgeInsets.all(kPadding),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Welcome',
-                // style: TextStyle(
-                //   fontFamily: 'Poppins',
-                //   fontWeight: FontWeight.bold,
-                //   fontSize: 26,
-                //   color: Color(0xFF1C1C1C),
-                // ),
-              ),
-              SizedBox(height: 6),
+              Text('Welcome', style: Theme.of(context).textTheme.bodyLarge!),
+              SizedBox(height: kPadding * 0.5),
               Text(
                 'Sign In to continue',
-                // style: TextStyle(
-                //   fontFamily: 'Poppins',
-                //   fontWeight: FontWeight.normal,
-                //   fontSize: 18,
-                //   color: Color(0xFF1C1C1C),
-                // ),
+                style: Theme.of(context).textTheme.bodyMedium!,
               ),
-              SizedBox(height: 26),
+              SizedBox(height: kPadding),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      kTextTabBarHeight * 0.5,
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: kPadding),
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      kTextTabBarHeight * 0.5,
+                    ),
+                  ),
                 ),
                 obscureText: true,
               ),
-              SizedBox(height: 26),
+              SizedBox(height: kPadding * 0.5),
               SizedBox(
                 width: double.infinity,
-                height: 49,
+                child: Text.rich(
+                  TextSpan(
+                    text: 'Forgot Password?',
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        print('forgot password');
+                      },
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              SizedBox(height: kPadding),
+              SizedBox(
+                width: double.infinity,
+                height: kTextTabBarHeight,
                 child: ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3B62FF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    backgroundColor: Colors.blue.shade800,
                   ),
                   child: Text(
                     'Login',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: kPadding),
               SizedBox(
                 width: double.infinity,
-                height: 49,
+                child: Text.rich(
+                  TextSpan(
+                    text: 'Don\'t have an account? ',
+                    children: [
+                      TextSpan(
+                        text: 'Sign up',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            print('sign up');
+                          },
+                      ),
+                      TextSpan(text: ' or 👇'),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(height: kPadding * 0.5),
+              SizedBox(
+                width: double.infinity,
+                height: kTextTabBarHeight,
                 child: ElevatedButton(
                   onPressed: () async {
-                    login('guest1@email.com', 'password').then((
-                      FlaskResponse r,
-                    ) {
+                    login('guest1@email.com', 'password').then((r) {
                       if (context.mounted) {
                         r.showSnackBar(
                           context,
@@ -105,49 +134,19 @@ class _LoginPageState extends State<LoginPage> {
                               ? 'Logged in as <${r.data['user']['first_name']}>'
                               : '',
                         );
-                        if (r.isOk) {
-                          context.go('/books');
-                        }
+                        if (r.isOk) context.go('/books');
                       }
                     });
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: kGreen),
                   child: Text(
                     'Continue as guest',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              // TODO forgot_password, signup
-              // SizedBox(height: 26),
-              // Center(
-              //   child: Text(
-              //     'Forgot Password?',
-              //     textAlign: TextAlign.center,
-              //     style: TextStyle(fontSize: 14, color: Color(0xFF87879D)),
-              //   ),
-              // ),
-              // SizedBox(height: 10),
-              // Center(
-              //   child: Text(
-              //     "Don't have an account? Sign Up",
-              //     textAlign: TextAlign.center,
-              //     style: TextStyle(
-              //       fontFamily: 'Poppins',
-              //       fontSize: 14,
-              //       color: Color(0xFF87879D),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),
