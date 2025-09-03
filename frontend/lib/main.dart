@@ -32,21 +32,19 @@ class _MyAppState extends State<MyApp> {
     goRouter = GoRouter(
       navigatorKey: kRootNavKey,
       initialLocation: '/books',
+      redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
       routes: [
         GoRoute(path: '/', redirect: (_, __) => '/books'),
         GoRoute(
           path: '/login',
-          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
           builder: (context, state) => SelectionArea(child: const LoginPage()),
         ),
         GoRoute(
           path: '/signup',
-          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
           builder: (context, state) => SelectionArea(child: const SignupPage()),
         ),
         GoRoute(
           path: '/verify',
-          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
           builder: (context, state) => SelectionArea(
             child: VerifyPage(token: state.uri.queryParameters['token']),
           ),

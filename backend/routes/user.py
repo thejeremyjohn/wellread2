@@ -6,27 +6,40 @@ from backend.app import app, db, User, PendingUserVerification
 @app.route('/signup', methods=['POST'])
 def signup():
     user = User(**request.params)
-    pending_user_verification = PendingUserVerification(user=user)
-
     db.session.add(user)
     db.session.commit()
 
-    text_body = f'''
-        Glad you could join us. Click the link below to verify:
-        http://localhost:8000/verify?token={pending_user_verification.token}
-    '''.strip()
-    user.receive_email('Verify your email w/ wellread', text_body=text_body)
+    _send_verification_email(user)
 
+    # raise Exception('oh no')
     return jsonify({
         'status': 'ok', 'error': None,
         'user': user.attrs_(add_props=request.add_props, expand=request.expand),
     })
 
 
+def _send_verification_email(user: User):
+    pending_user_verification = PendingUserVerification(user=user)
+    db.session.add(pending_user_verification)
+    db.session.commit()
+
+    pending_user_verification.user.receive_email(
+        'Verify your email w/ wellread',
+        text_body=f'''
+            Glad you could join us. Click the link below to verify:
+            http://localhost:8000/verify?token={pending_user_verification.token}
+        '''.strip()
+    )
+
+
 @app.route('/verify/<token>', methods=['GET', 'POST'])
-def verify(token):
+def verify(token: str):
     pending_user_verification = PendingUserVerification.query.get(token)
-    assert pending_user_verification, "invalid verification token"
+    assert pending_user_verification, 'invalid verification token'
+
+    user = pending_user_verification.user
+    access_token = user.create_access_token()
+    refresh_token = user.create_refresh_token()
 
     for pending in (PendingUserVerification.query
                     .filter_by(user_id=pending_user_verification.user_id)):
@@ -35,6 +48,9 @@ def verify(token):
 
     return jsonify({
         'status': 'ok', 'error': None,
+        'access_token': access_token,
+        'refresh_token': refresh_token,
+        'user': user.attrs_(add_props=request.add_props, expand=request.expand),
     })
 
 
@@ -43,10 +59,12 @@ def login():
     user = User.find_by_credentials(**request.params)
     assert user, 'invalid email or password'
 
-    access_token, refresh_token = None, None
     if user.verified:
         access_token = user.create_access_token()
         refresh_token = user.create_refresh_token()
+    else:
+        access_token, refresh_token = None, None
+        _send_verification_email(user)
 
     return jsonify({
         'status': 'ok', 'error': None,

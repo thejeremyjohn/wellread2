@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 
@@ -22,7 +23,11 @@ class _VerifyPageState extends State<VerifyPage> {
 
   Future<bool?> verify() async {
     final r = await flaskPost(flaskUri('/verify/${widget.token}'));
-    if (r.isOk) return true;
+    if (r.isOk) {
+      await storage.write(key: 'accessToken', value: r.data['access_token']);
+      await storage.write(key: 'refreshToken', value: r.data['refresh_token']);
+      return true;
+    }
     throw Exception(r.error);
   }
 
@@ -34,11 +39,11 @@ class _VerifyPageState extends State<VerifyPage> {
           future: _isVerified,
           builder: (context, isVerified) {
             Future.delayed(const Duration(seconds: 3), () {
-              if (context.mounted) context.go('/login');
+              if (context.mounted) context.go('/books');
             });
             return Text(
               isVerified
-                  ? 'Thank you for verifying !\n... redirecting to login page ...'
+                  ? 'Thank you for verifying !\n( signing you in now... )'
                   : '',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(

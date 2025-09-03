@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
-import 'package:wellread2frontend/pages/login_page.dart';
+import 'package:wellread2frontend/flask_util/login_logout.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -19,6 +19,15 @@ class _SignupPageState extends State<SignupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isSignupResponseOk = false;
+
+  // @override
+  // void initState() {
+  //   _firstNameController.text = 'jeremy';
+  //   _lastNameController.text = 'john';
+  //   _emailController.text = 'thejeremyjohn@gmail.com';
+  //   _passwordController.text = 'password';
+  //   super.initState();
+  // }
 
   @override
   void dispose() {
@@ -52,6 +61,20 @@ class _SignupPageState extends State<SignupPage> {
         customMessageOnSuccess: r.isOk ? 'Signup successful!' : '',
       );
     }
+  }
+
+  void submitLogin(BuildContext context, String email, String password) async {
+    login(email, password).then((r) {
+      if (context.mounted) {
+        r.showSnackBar(
+          context,
+          customMessageOnSuccess: r.isOk
+              ? 'Logged in as <${r.data['user']['first_name']}>'
+              : '',
+        );
+        if (r.isOk) context.go('/books');
+      }
+    });
   }
 
   @override
