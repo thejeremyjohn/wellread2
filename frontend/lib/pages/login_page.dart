@@ -48,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+                // onSubmitted: (_) => FocusScope.of(context).nextFocus(), // TODO
               ),
               SizedBox(height: kPadding),
               TextField(
@@ -61,6 +62,11 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 obscureText: true,
+                onSubmitted: (_) => submitLogin(
+                  context,
+                  _emailController.text,
+                  _passwordController.text,
+                ),
               ),
               SizedBox(height: kPadding * 0.5),
               SizedBox(
@@ -84,7 +90,11 @@ class _LoginPageState extends State<LoginPage> {
                 width: double.infinity,
                 height: kTextTabBarHeight,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => submitLogin(
+                    context,
+                    _emailController.text,
+                    _passwordController.text,
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade800,
                   ),
@@ -110,9 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            print('sign up');
-                          },
+                          ..onTap = () => context.go('/signup'),
                       ),
                       TextSpan(text: ' or 👇'),
                     ],
@@ -125,19 +133,8 @@ class _LoginPageState extends State<LoginPage> {
                 width: double.infinity,
                 height: kTextTabBarHeight,
                 child: ElevatedButton(
-                  onPressed: () async {
-                    login('guest1@email.com', 'password').then((r) {
-                      if (context.mounted) {
-                        r.showSnackBar(
-                          context,
-                          customMessageOnSuccess: r.isOk
-                              ? 'Logged in as <${r.data['user']['first_name']}>'
-                              : '',
-                        );
-                        if (r.isOk) context.go('/books');
-                      }
-                    });
-                  },
+                  onPressed: () =>
+                      submitLogin(context, 'guest1@email.com', 'password'),
                   style: ElevatedButton.styleFrom(backgroundColor: kGreen),
                   child: Text(
                     'Continue as guest',
@@ -153,4 +150,18 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+}
+
+void submitLogin(BuildContext context, String email, String password) async {
+  login(email, password).then((r) {
+    if (context.mounted) {
+      r.showSnackBar(
+        context,
+        customMessageOnSuccess: r.isOk
+            ? 'Logged in as <${r.data['user']['first_name']}>'
+            : '',
+      );
+      if (r.isOk) context.go('/books');
+    }
+  });
 }
