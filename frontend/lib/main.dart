@@ -6,6 +6,7 @@ import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
@@ -32,26 +33,30 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: kRootNavKey,
       initialLocation: '/books',
       routes: [
-        GoRoute(path: '/', redirect: (context, state) => '/books'),
+        GoRoute(path: '/', redirect: (_, __) => '/books'),
+        GoRoute(
+          path: '/login',
+          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
+          builder: (context, state) => SelectionArea(child: const LoginPage()),
+        ),
+        GoRoute(
+          path: '/signup',
+          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
+          builder: (context, state) => SelectionArea(child: const SignupPage()),
+        ),
         GoRoute(
           path: '/verify',
+          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
           builder: (context, state) => SelectionArea(
             child: VerifyPage(token: state.uri.queryParameters['token']),
           ),
-        ),
-        GoRoute(
-          path: '/login',
-          redirect: (context, state) async =>
-              await isLoggedIn() ? '/books' : null,
-          builder: (context, state) => SelectionArea(child: const LoginPage()),
         ),
         ShellRoute(
           navigatorKey: kShellNavKey,
           builder: (context, state, child) => SelectionArea(
             child: Scaffold(appBar: WellreadAppBar(), body: child),
           ),
-          redirect: (context, state) async =>
-              await isLoggedIn() ? null : '/login',
+          redirect: (_, __) async => await isLoggedIn() ? null : '/login',
           routes: <RouteBase>[
             GoRoute(
               path: '/books',
@@ -77,8 +82,32 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.dark, fontFamily: 'Montserrat'),
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        fontFamily: 'Montserrat',
+        pageTransitionsTheme: PageTransitionsTheme(
+          builders: {
+            for (final platform in TargetPlatform.values)
+              platform: const NoTransitionsBuilder(),
+          },
+        ),
+      ),
       routerConfig: goRouter,
     );
+  }
+}
+
+class NoTransitionsBuilder extends PageTransitionsBuilder {
+  const NoTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T>? route,
+    BuildContext? context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget? child,
+  ) {
+    return child!;
   }
 }
