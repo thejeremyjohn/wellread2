@@ -6,6 +6,7 @@ import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wellread2frontend/pages/verify_page.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
 void main() {
@@ -30,9 +31,14 @@ class _MyAppState extends State<MyApp> {
     goRouter = GoRouter(
       navigatorKey: kRootNavKey,
       initialLocation: '/books',
-      redirect: (context, state) async => await isLoggedIn() ? null : '/login',
       routes: [
         GoRoute(path: '/', redirect: (context, state) => '/books'),
+        GoRoute(
+          path: '/verify',
+          builder: (context, state) => SelectionArea(
+            child: VerifyPage(token: state.uri.queryParameters['token']),
+          ),
+        ),
         GoRoute(
           path: '/login',
           redirect: (context, state) async =>
@@ -44,6 +50,8 @@ class _MyAppState extends State<MyApp> {
           builder: (context, state, child) => SelectionArea(
             child: Scaffold(appBar: WellreadAppBar(), body: child),
           ),
+          redirect: (context, state) async =>
+              await isLoggedIn() ? null : '/login',
           routes: <RouteBase>[
             GoRoute(
               path: '/books',
