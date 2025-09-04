@@ -11,10 +11,8 @@ def signup():
 
     _send_verification_email(user)
 
-    # raise Exception('oh no')
     return jsonify({
         'status': 'ok', 'error': None,
-        'user': user.attrs_(add_props=request.add_props, expand=request.expand),
     })
 
 
@@ -23,13 +21,39 @@ def _send_verification_email(user: User):
     db.session.add(pending_user_verification)
     db.session.commit()
 
-    pending_user_verification.user.receive_email(
+    user.receive_email(
         'Verify your email w/ wellread',
         text_body=f'''
             Glad you could join us. Click the link below to verify:
             http://localhost:8000/verify?token={pending_user_verification.token}
         '''.strip()
     )
+
+
+def _send_forgot_password_verification_email(user: User):
+    pending_user_verification = PendingUserVerification(user=user, forgot_password=True)
+    db.session.add(pending_user_verification)
+    db.session.commit()
+
+    user.receive_email(
+        'wellread password-reset',
+        text_body=f'''
+            It happens to everybody. Click here to set your password:
+            http://localhost:8000/forgotpw?token={pending_user_verification.token}
+        '''.strip()
+    )
+
+
+@app.route('/forgot_password', methods=['POST'])
+def forgot_password():
+    user = User.query.filter_by(email=request.params['email']).one_or_none()
+    assert user, f'no user found with email={request.params['email']}'
+
+    _send_forgot_password_verification_email(user)
+
+    return jsonify({
+        'status': 'ok', 'error': None,
+    })
 
 
 @app.route('/verify/<token>', methods=['GET', 'POST'])
@@ -85,4 +109,19 @@ def login_refresh():
         'status': 'ok', 'error': None,
         'access_token': access_token,
         'user': current_user.attrs_(add_props=request.add_props, expand=request.expand),
+    })
+
+
+@app.route('/user', methods=['PUT'])
+@jwt_required()
+def user_update():
+    user = current_user
+
+    for key, value in request.params.items():
+        setattr(user, key, value)
+    db.session.commit()
+
+    return jsonify({
+        'status': 'ok', 'error': None,
+        'user': user.attrs,
     })

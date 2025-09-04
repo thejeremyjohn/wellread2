@@ -459,7 +459,10 @@ class User(DBModel):
 
     @property
     def verified(self):
-        return PendingUserVerification.query.filter_by(user_id=self.id).count() == 0
+        pending_verifications = PendingUserVerification.query \
+            .filter_by(user_id=self.id, forgot_password=False)
+
+        return pending_verifications.count() == 0
 
     def create_access_token(self, **kwargs):
         return create_access_token(identity=str(self.id), **kwargs)
