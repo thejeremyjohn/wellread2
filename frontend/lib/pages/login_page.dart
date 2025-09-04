@@ -16,6 +16,12 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoginResponseOk = false;
 
+  // @override
+  // void initState() {
+  //   _emailController.text = 'thejeremyjohn@gmail.com';
+  //   super.initState();
+  // }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -23,7 +29,11 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void submitLogin(BuildContext context, String email, String password) async {
+  Future<void> submitLogin(
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
     login(email, password).then((r) {
       if (context.mounted) {
         r.showSnackBar(
@@ -105,9 +115,10 @@ class _LoginPageState extends State<LoginPage> {
                           style: Theme.of(context).textTheme.bodyMedium!
                               .copyWith(decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              print('forgot password');
-                            },
+                            ..onTap = () => context.go(
+                              '/forgotpw',
+                              extra: {'email': _emailController.text},
+                            ),
                         ),
                         textAlign: TextAlign.right,
                       ),

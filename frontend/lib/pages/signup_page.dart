@@ -38,7 +38,7 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
-  void submitSignup(
+  Future<void> submitSignup(
     BuildContext context,
     String firstName,
     String lastName,

@@ -7,6 +7,7 @@ import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/pages/signup_page.dart';
+import 'package:wellread2frontend/pages/forgot_pw_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
@@ -38,6 +39,16 @@ class _MyAppState extends State<MyApp> {
         GoRoute(
           path: '/login',
           builder: (context, state) => SelectionArea(child: const LoginPage()),
+        ),
+        GoRoute(
+          path: '/forgotpw',
+          redirect: (_, __) => null,
+          builder: (context, state) => SelectionArea(
+            child: ForgotPwPage(
+              email: (state.extra as Map?)?['email'],
+              token: state.uri.queryParameters['token'],
+            ),
+          ),
         ),
         GoRoute(
           path: '/signup',
