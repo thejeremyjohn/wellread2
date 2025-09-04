@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wellread2frontend/constants.dart';
 
 class PasswordField extends StatefulWidget {
-  const PasswordField({
-    super.key,
-    required this.controller,
-    required this.onSubmitted,
-  });
+  const PasswordField({super.key, this.controller, this.onSubmitted});
   final TextEditingController? controller;
   final Function(String)? onSubmitted;
 
