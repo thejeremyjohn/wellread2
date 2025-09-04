@@ -18,6 +18,7 @@ class _SignupPageState extends State<SignupPage> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isObscureText = true;
   bool _isSignupResponseOk = false;
 
   // @override
@@ -145,8 +146,23 @@ class _SignupPageState extends State<SignupPage> {
                             kTextTabBarHeight * 0.5,
                           ),
                         ),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: kPadding * 0.5,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isObscureText
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() => _isObscureText = !_isObscureText);
+                            },
+                          ),
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: _isObscureText,
                       onSubmitted: (_) => submitSignup(
                         context,
                         _firstNameController.text,

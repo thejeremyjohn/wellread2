@@ -14,6 +14,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isObscureText = true;
   bool _isLoginResponseOk = false;
 
   // @override
@@ -98,8 +99,23 @@ class _LoginPageState extends State<LoginPage> {
                             kTextTabBarHeight * 0.5,
                           ),
                         ),
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: kPadding * 0.5,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isObscureText
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() => _isObscureText = !_isObscureText);
+                            },
+                          ),
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: _isObscureText,
                       onSubmitted: (_) => submitLogin(
                         context,
                         _emailController.text,

@@ -16,6 +16,7 @@ class ForgotPwPage extends StatefulWidget {
 class _ForgotPwPageState extends State<ForgotPwPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isObscureText = true;
   bool _isForgotPasswordResponseOk = false;
   bool _isVerifyResponseOk = false;
   bool _isUserUpdateResponseOk = false;
@@ -160,8 +161,25 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                               kTextTabBarHeight * 0.5,
                             ),
                           ),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: kPadding * 0.5,
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                _isObscureText
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
+                              onPressed: () {
+                                setState(
+                                  () => _isObscureText = !_isObscureText,
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: _isObscureText,
                         onSubmitted: (_) => setPassword(context),
                       ),
                       SizedBox(height: kPadding),
