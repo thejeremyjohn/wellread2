@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
+import 'package:wellread2frontend/widgets/password_field.dart';
 
 class ForgotPwPage extends StatefulWidget {
   const ForgotPwPage({super.key, required this.email, required this.token});
@@ -16,7 +17,6 @@ class ForgotPwPage extends StatefulWidget {
 class _ForgotPwPageState extends State<ForgotPwPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isObscureText = true;
   bool _isForgotPasswordResponseOk = false;
   bool _isVerifyResponseOk = false;
   bool _isUserUpdateResponseOk = false;
@@ -152,34 +152,8 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                         style: Theme.of(context).textTheme.bodyMedium!,
                       ),
                       SizedBox(height: kPadding),
-                      TextField(
+                      PasswordField(
                         controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              kTextTabBarHeight * 0.5,
-                            ),
-                          ),
-                          suffixIcon: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: kPadding * 0.5,
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                _isObscureText
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                              onPressed: () {
-                                setState(
-                                  () => _isObscureText = !_isObscureText,
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        obscureText: _isObscureText,
                         onSubmitted: (_) => setPassword(context),
                       ),
                       SizedBox(height: kPadding),

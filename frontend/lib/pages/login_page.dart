@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
+import 'package:wellread2frontend/widgets/password_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +15,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isObscureText = true;
   bool _isLoginResponseOk = false;
 
   // @override
@@ -90,32 +90,8 @@ class _LoginPageState extends State<LoginPage> {
                       // onSubmitted: (_) => FocusScope.of(context).nextFocus(), // TODO
                     ),
                     SizedBox(height: kPadding),
-                    TextField(
+                    PasswordField(
                       controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            kTextTabBarHeight * 0.5,
-                          ),
-                        ),
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: kPadding * 0.5,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              _isObscureText
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                            ),
-                            onPressed: () {
-                              setState(() => _isObscureText = !_isObscureText);
-                            },
-                          ),
-                        ),
-                      ),
-                      obscureText: _isObscureText,
                       onSubmitted: (_) => submitLogin(
                         context,
                         _emailController.text,

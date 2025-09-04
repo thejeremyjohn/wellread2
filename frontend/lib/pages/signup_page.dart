@@ -5,6 +5,7 @@ import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
+import 'package:wellread2frontend/widgets/password_field.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -18,7 +19,6 @@ class _SignupPageState extends State<SignupPage> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isObscureText = true;
   bool _isSignupResponseOk = false;
 
   // @override
@@ -137,32 +137,8 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                     SizedBox(height: kPadding),
-                    TextField(
+                    PasswordField(
                       controller: _passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            kTextTabBarHeight * 0.5,
-                          ),
-                        ),
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: kPadding * 0.5,
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              _isObscureText
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                            ),
-                            onPressed: () {
-                              setState(() => _isObscureText = !_isObscureText);
-                            },
-                          ),
-                        ),
-                      ),
-                      obscureText: _isObscureText,
                       onSubmitted: (_) => submitSignup(
                         context,
                         _firstNameController.text,
