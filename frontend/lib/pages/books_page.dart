@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
@@ -21,6 +23,7 @@ class _BooksPageState extends State<BooksPage> {
   late bool _reverse;
   late int _totalCount;
 
+  bool _isScrollable = false;
   final ScrollController _controller = ScrollController();
   final List<Book> _books = [];
 
@@ -28,7 +31,7 @@ class _BooksPageState extends State<BooksPage> {
   void initState() {
     super.initState();
     _page = (widget.page as int?) ?? 0;
-    _orderBy = widget.orderBy ?? 'id';
+    _orderBy = widget.orderBy ?? 'title';
     _reverse = bool.tryParse(widget.reverse ?? 'false')!;
 
     _controller.addListener(_scrollListener);
@@ -95,114 +98,124 @@ class _BooksPageState extends State<BooksPage> {
     }
   }
 
+  @override
+  void didUpdateWidget(covariant BooksPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    fetchUntilScrollable();
+  }
+
   void fetchUntilScrollable() {
     /// attempting to load rows beyond the viewport
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_books.isNotEmpty &&
-          _controller.hasClients &&
-          _controller.position.hasContentDimensions &&
-          _controller.position.maxScrollExtent == 0) {
-        fetchBooks(); // calls setState
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!_isScrollable &&
+        _books.isNotEmpty &&
+        _controller.hasClients &&
+        _controller.position.hasContentDimensions &&
+        _controller.position.maxScrollExtent == 0) {
+      fetchBooks(); // calls setState
+    } else {
+      setState(() => _isScrollable = true);
+    }
+    // });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          Expanded(
-            flex: 1,
-            child: Container(
-              margin: EdgeInsets.all(kPadding),
-              child: Text('[My Shelves]', textAlign: TextAlign.center),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              margin: EdgeInsets.all(kPadding),
-              child: ListView(
-                controller: _controller,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return ListView(
+            padding: EdgeInsets.all(kPadding),
+            controller: _controller,
+            children: [
+              Container(
+                margin: EdgeInsets.all(kPadding),
+                child: Text(
+                  'My Books',
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    fontFamily: 'LibreBaskerville',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      fetchUntilScrollable();
+                  Container(
+                    margin: EdgeInsets.all(kPadding),
+                    width: constraints.maxWidth * 0.15,
+                    child: Text('[My Shelves]', textAlign: TextAlign.center),
+                  ),
+                  Expanded(
+                    child: DataTable(
+                      sortColumnIndex: columnLabels.indexOf(_orderBy),
+                      sortAscending: !_reverse,
+                      showCheckboxColumn: false,
+                      columns: List.generate(columnLabels.length, (index) {
+                        String columnLabel = columnLabels[index];
+                        String? orderBy = orderBys[index];
 
-                      return SizedBox(
-                        width: constraints.maxWidth,
-                        child: DataTable(
-                          sortColumnIndex: columnLabels.indexOf(_orderBy),
-                          sortAscending: !_reverse,
-                          showCheckboxColumn: false,
-                          columns: List.generate(columnLabels.length, (index) {
-                            String columnLabel = columnLabels[index];
-                            String? orderBy = orderBys[index];
-
-                            return DataColumn(
-                              columnWidth: columnLabel != 'cover'
-                                  ? null
-                                  : FixedColumnWidth(128),
-                              label: Text(
-                                columnLabel,
-                                style: TextStyle(
-                                  color: orderBy is String ? kGreen : null,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        return DataColumn(
+                          columnWidth: columnLabel != 'cover'
+                              ? null
+                              : FixedColumnWidth(128),
+                          label: Text(
+                            columnLabel,
+                            style: TextStyle(
+                              color: orderBy is String ? kGreen : null,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onSort: (_, __) {
+                            // if column is already sorted, reverse sorting, else sort asc
+                            _reverse = columnLabel == _orderBy
+                                ? !_reverse
+                                : false;
+                            // push a new page, reload all books
+                            context.push(
+                              '/books?orderBy=$columnLabel&reverse=$_reverse',
+                            );
+                          },
+                        );
+                      }),
+                      rows: _books.map((Book book) {
+                        return DataRow(
+                          onSelectChanged: (value) =>
+                              context.go('/book/${book.id}'),
+                          cells: [
+                            // DataCell(Text(book.id.toString())),
+                            DataCell(book.cover),
+                            DataCell(Text(book.title)),
+                            DataCell(
+                              Text(book.author),
+                              onTap: () => print('`${book.author}` clicked'),
+                            ),
+                            DataCell(Text(book.avgRatingString!)),
+                            DataCell(
+                              RatingBar.builder(
+                                initialRating: book.myRating!,
+                                minRating: 1,
+                                itemSize: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium!.fontSize!,
+                                itemBuilder: (context, idx) =>
+                                    Icon(Icons.star, color: Colors.amber),
+                                onRatingUpdate: (rating) {
+                                  // TODO review_update
+                                },
                               ),
-                              onSort: (_, __) {
-                                // if column is already sorted, reverse sorting, else sort asc
-                                _reverse = columnLabel == _orderBy
-                                    ? !_reverse
-                                    : false;
-                                // push a new page, reload all books
-                                context.push(
-                                  '/books?orderBy=$columnLabel&reverse=$_reverse',
-                                );
-                              },
-                            );
-                          }),
-                          rows: _books.map((Book book) {
-                            return DataRow(
-                              onSelectChanged: (value) =>
-                                  context.go('/book/${book.id}'),
-                              cells: [
-                                // DataCell(Text(book.id.toString())),
-                                DataCell(book.cover),
-                                DataCell(Text(book.title)),
-                                DataCell(
-                                  Text(book.author),
-                                  onTap: () =>
-                                      print('`${book.author}` clicked'),
-                                ),
-                                DataCell(Text(book.avgRatingString!)),
-                                DataCell(
-                                  RatingBar.builder(
-                                    initialRating: book.myRating!,
-                                    minRating: 1,
-                                    itemSize: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium!.fontSize!,
-                                    itemBuilder: (context, idx) =>
-                                        Icon(Icons.star, color: Colors.amber),
-                                    onRatingUpdate: (rating) {
-                                      // TODO review_update
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    },
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
