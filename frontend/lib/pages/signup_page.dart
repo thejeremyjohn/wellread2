@@ -174,7 +174,7 @@ class _SignupPageState extends State<SignupPage> {
                       width: double.infinity,
                       child: Text.rich(
                         TextSpan(
-                          text: 'Already have an account? ',
+                          text: 'Already have an account? 👉 ',
                           children: [
                             TextSpan(
                               text: 'Sign in',

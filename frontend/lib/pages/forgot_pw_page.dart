@@ -24,7 +24,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
   @override
   void initState() {
     _emailController.text = widget.email ?? '';
-    if (widget.token != null) verify();
+    if (widget.token != null) verify(context);
     super.initState();
   }
 
@@ -49,16 +49,20 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
     }
   }
 
-  Future<void> verify() async {
+  Future<void> verify(BuildContext context) async {
     final r = await flaskPost(flaskUri('/verify/${widget.token}'));
     if (r.isOk) {
       setState(() => _isVerifyResponseOk = true);
       await storage.write(key: 'accessToken', value: r.data['access_token']);
       await storage.write(key: 'refreshToken', value: r.data['refresh_token']);
     }
-    BuildContext? context = kRootNavKey.currentContext;
-    if (context != null && context.mounted) {
-      r.showSnackBar(context);
+    if (context.mounted) {
+      r.showSnackBar(
+        context,
+        customMessageOnSuccess: r.isOk
+            ? 'Verified [ ${r.data['user']['email']} ].'
+            : '',
+      );
       if (r.isOk) return;
       context.go('/login');
     }
@@ -84,7 +88,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
           builder: (context) {
             if (widget.email != null) {
               if (!_isForgotPasswordResponseOk) {
-                // forgot_password form
+                // SCENARIO 1a: forgot_password form
                 return Padding(
                   padding: const EdgeInsets.all(kPadding),
                   child: Column(
@@ -128,7 +132,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                 );
               }
 
-              // successful forgot_password message and verification call to action
+              // SCENARIO 1b: successful /forgot_password message and verification call to action
               return Text(
                 'We\'ve emailed you a reset-password link.\n( Check your spam folder if you don\'t see it right away. )',
                 textAlign: TextAlign.center,
@@ -141,7 +145,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
 
             if (widget.token != null && _isVerifyResponseOk) {
               if (!_isUserUpdateResponseOk) {
-                // verified -> reset-password form
+                // SCENARIO 2a: verified -> reset-password form
                 return Padding(
                   padding: const EdgeInsets.all(kPadding),
                   child: Column(
@@ -176,31 +180,38 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                   ),
                 );
               }
+
+              // SCENARIO 2b: verified and password changed -> invite to goto /books
+              return Text.rich(
+                TextSpan(
+                  text: 'Ok! You\'re signed in by the way. 👉 ',
+                  children: [
+                    TextSpan(
+                      text: '/books',
+                      style: Theme.of(context).textTheme.headlineSmall!
+                          .copyWith(
+                            fontFamily: 'LibreBaskerville',
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue,
+                          ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => context.go('/books'),
+                    ),
+                  ],
+                ),
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                  fontFamily: 'LibreBaskerville',
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              );
             }
 
-            // verified and password changed -> invite to goto /books
-            return Text.rich(
-              TextSpan(
-                text: 'Ok! You\'re signed in by the way. 👉 ',
-                children: [
-                  TextSpan(
-                    text: '/books',
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      fontFamily: 'LibreBaskerville',
-                      fontWeight: FontWeight.w600,
-                      color: Colors.blue,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () => context.go('/books'),
-                  ),
-                ],
-              ),
-              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontFamily: 'LibreBaskerville',
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            );
+            if (widget.email == null && widget.token == null) {
+              // SCENARIO 3: nothing to see here -> redirect to /login
+              context.go('/login');
+            }
+            return Container(); // placeholder
           },
         ),
       ),

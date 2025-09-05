@@ -140,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
                       width: double.infinity,
                       child: Text.rich(
                         TextSpan(
-                          text: 'Don\'t have an account? ',
+                          text: 'Don\'t have an account? 👉 ',
                           children: [
                             TextSpan(
                               text: 'Sign up',

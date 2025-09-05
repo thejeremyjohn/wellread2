@@ -42,7 +42,6 @@ class _MyAppState extends State<MyApp> {
         ),
         GoRoute(
           path: '/forgotpw',
-          redirect: (_, __) => null,
           builder: (context, state) => SelectionArea(
             child: ForgotPwPage(
               email: (state.extra as Map?)?['email'],
