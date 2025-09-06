@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
@@ -107,7 +105,6 @@ class _BooksPageState extends State<BooksPage> {
 
   void fetchUntilScrollable() {
     /// attempting to load rows beyond the viewport
-    // print('fetchUntilScrollable called!');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isScrollable &&
           // _books.isNotEmpty &&
@@ -179,9 +176,12 @@ class _BooksPageState extends State<BooksPage> {
                                   _reverse = columnLabel == _orderBy
                                       ? !_reverse
                                       : false;
-                                  // push a new page, reload all books
-                                  context.push(
-                                    '/books?orderBy=$columnLabel&reverse=$_reverse',
+                                  // refresh page with new arguments and without nav history
+                                  Router.neglect(
+                                    context,
+                                    () => context.go(
+                                      '/books?orderBy=$columnLabel&reverse=$_reverse',
+                                    ),
                                   );
                                 },
                         );
