@@ -61,7 +61,8 @@ class _BooksPageState extends State<BooksPage> {
     'myRating',
   ];
 
-  List<String?> orderBys = [
+  // ignore: non_constant_identifier_names
+  List<String?> order_byLookup = [
     // 'id',
     null, // 'cover',
     'title',
@@ -74,9 +75,9 @@ class _BooksPageState extends State<BooksPage> {
     Uri endpoint = flaskUri(
       '/books',
       queryParameters: {
-        'per_page': '20',
+        'per_page': '50',
         'page': (_page + 1).toString(),
-        'order_by': orderBys[columnLabels.indexOf(_orderBy)],
+        'order_by': order_byLookup[columnLabels.indexOf(_orderBy)],
         'reverse': _reverse.toString(),
       },
       addProps: ['avg_rating', 'my_rating', 'my_shelves'],
@@ -100,23 +101,24 @@ class _BooksPageState extends State<BooksPage> {
 
   @override
   void didUpdateWidget(covariant BooksPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
     fetchUntilScrollable();
+    super.didUpdateWidget(oldWidget);
   }
 
   void fetchUntilScrollable() {
     /// attempting to load rows beyond the viewport
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (!_isScrollable &&
-        _books.isNotEmpty &&
-        _controller.hasClients &&
-        _controller.position.hasContentDimensions &&
-        _controller.position.maxScrollExtent == 0) {
-      fetchBooks(); // calls setState
-    } else {
-      setState(() => _isScrollable = true);
-    }
-    // });
+    // print('fetchUntilScrollable called!');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isScrollable &&
+          // _books.isNotEmpty &&
+          _controller.hasClients &&
+          _controller.position.hasContentDimensions &&
+          _controller.position.maxScrollExtent == 0) {
+        fetchBooks(); // calls setState
+      } else {
+        setState(() => _isScrollable = true);
+      }
+    });
   }
 
   @override
@@ -124,6 +126,7 @@ class _BooksPageState extends State<BooksPage> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
+          double dataRowHeight = kToolbarHeight; // 48
           return ListView(
             padding: EdgeInsets.all(kPadding),
             controller: _controller,
@@ -149,12 +152,14 @@ class _BooksPageState extends State<BooksPage> {
                   ),
                   Expanded(
                     child: DataTable(
+                      dataRowMinHeight: dataRowHeight,
+                      dataRowMaxHeight: dataRowHeight,
                       sortColumnIndex: columnLabels.indexOf(_orderBy),
                       sortAscending: !_reverse,
                       showCheckboxColumn: false,
                       columns: List.generate(columnLabels.length, (index) {
                         String columnLabel = columnLabels[index];
-                        String? orderBy = orderBys[index];
+                        String? orderBy = order_byLookup[index];
 
                         return DataColumn(
                           columnWidth: columnLabel != 'cover'
@@ -163,20 +168,22 @@ class _BooksPageState extends State<BooksPage> {
                           label: Text(
                             columnLabel,
                             style: TextStyle(
-                              color: orderBy is String ? kGreen : null,
+                              color: orderBy == null ? null : kGreen,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          onSort: (_, __) {
-                            // if column is already sorted, reverse sorting, else sort asc
-                            _reverse = columnLabel == _orderBy
-                                ? !_reverse
-                                : false;
-                            // push a new page, reload all books
-                            context.push(
-                              '/books?orderBy=$columnLabel&reverse=$_reverse',
-                            );
-                          },
+                          onSort: orderBy == null
+                              ? null
+                              : (_, __) {
+                                  // if column is already sorted, reverse sorting, else sort asc
+                                  _reverse = columnLabel == _orderBy
+                                      ? !_reverse
+                                      : false;
+                                  // push a new page, reload all books
+                                  context.push(
+                                    '/books?orderBy=$columnLabel&reverse=$_reverse',
+                                  );
+                                },
                         );
                       }),
                       rows: _books.map((Book book) {
