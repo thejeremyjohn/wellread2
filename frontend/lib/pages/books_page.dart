@@ -51,29 +51,35 @@ class _BooksPageState extends State<BooksPage> {
   }
 
   List<String> columnLabels = [
-    // 'id',
     'cover',
     'title',
     'author',
     'avgRating',
     'myRating',
   ];
-
   // ignore: non_constant_identifier_names
   List<String?> order_byLookup = [
-    // 'id',
     null, // 'cover',
     'title',
     'author',
     'avg_rating',
     'my_rating',
   ];
+  List<double?> widthModifiers = [
+    0.1, // 'cover',
+    null, // 'title',
+    0.15, // 'author',
+    0.15, // 'avgRating',
+    0.15, // 'myRating',
+  ];
+  double myShelvesWidthModifier = 0.15;
+  double dataRowHeight = 128;
 
   Future<List<Book>> fetchBooks() async {
     Uri endpoint = flaskUri(
       '/books',
       queryParameters: {
-        'per_page': '50',
+        'per_page': '20',
         'page': (_page + 1).toString(),
         'order_by': order_byLookup[columnLabels.indexOf(_orderBy)],
         'reverse': _reverse.toString(),
@@ -123,7 +129,6 @@ class _BooksPageState extends State<BooksPage> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          double dataRowHeight = kToolbarHeight; // 48
           return ListView(
             padding: EdgeInsets.all(kPadding),
             controller: _controller,
@@ -144,11 +149,13 @@ class _BooksPageState extends State<BooksPage> {
                 children: [
                   Container(
                     margin: EdgeInsets.all(kPadding),
-                    width: constraints.maxWidth * 0.15,
+                    width: constraints.maxWidth * myShelvesWidthModifier,
                     child: Text('[My Shelves]', textAlign: TextAlign.center),
                   ),
                   Expanded(
                     child: DataTable(
+                      horizontalMargin: 0,
+                      columnSpacing: kPadding,
                       dataRowMinHeight: dataRowHeight,
                       dataRowMaxHeight: dataRowHeight,
                       sortColumnIndex: columnLabels.indexOf(_orderBy),
@@ -156,22 +163,23 @@ class _BooksPageState extends State<BooksPage> {
                       showCheckboxColumn: false,
                       columns: List.generate(columnLabels.length, (index) {
                         String columnLabel = columnLabels[index];
-                        String? orderBy = order_byLookup[index];
+                        bool canSort = order_byLookup[index] != null;
 
                         return DataColumn(
-                          columnWidth: columnLabel != 'cover'
+                          columnWidth: widthModifiers[index] == null
                               ? null
-                              : FixedColumnWidth(128),
+                              : FixedColumnWidth(
+                                  constraints.maxWidth * widthModifiers[index]!,
+                                ),
                           label: Text(
                             columnLabel,
                             style: TextStyle(
-                              color: orderBy == null ? null : kGreen,
+                              color: canSort ? kGreen : null,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          onSort: orderBy == null
-                              ? null
-                              : (_, __) {
+                          onSort: canSort
+                              ? (_, __) {
                                   // if column is already sorted, reverse sorting, else sort asc
                                   _reverse = columnLabel == _orderBy
                                       ? !_reverse
@@ -183,7 +191,8 @@ class _BooksPageState extends State<BooksPage> {
                                       '/books?orderBy=$columnLabel&reverse=$_reverse',
                                     ),
                                   );
-                                },
+                                }
+                              : null,
                         );
                       }),
                       rows: _books.map((Book book) {
@@ -191,8 +200,14 @@ class _BooksPageState extends State<BooksPage> {
                           onSelectChanged: (value) =>
                               context.go('/book/${book.id}'),
                           cells: [
-                            // DataCell(Text(book.id.toString())),
-                            DataCell(book.cover),
+                            DataCell(
+                              Container(
+                                margin: EdgeInsets.symmetric(
+                                  vertical: kPadding,
+                                ),
+                                child: book.cover,
+                              ),
+                            ),
                             DataCell(Text(book.title)),
                             DataCell(
                               Text(book.author),

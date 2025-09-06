@@ -71,7 +71,7 @@ class _MyAppState extends State<MyApp> {
             GoRoute(
               path: '/books',
               builder: (context, state) => BooksPage(
-                key: UniqueKey(),
+                key: UniqueKey(), // forces .go([same]) to trigger initState
                 page: state.uri.queryParameters['page'],
                 orderBy: state.uri.queryParameters['orderBy'],
                 reverse: state.uri.queryParameters['reverse'],
