@@ -271,7 +271,11 @@ class Book(DBModel):
         ''' current_user's shelves of this book '''
         if not request:
             raise Exception('cannot get `my_shelves` outside of request context')
-        return [b.attrs for b in self._shelves.filter(Bookshelf.user_id == current_user.id)]
+        return [
+            b.attrs for b in self._shelves
+            .filter(Bookshelf.user_id == current_user.id)
+            .order_by(Bookshelf.can_delete)
+        ]
 
 
 class BookImage(DBModel, CloudfrontMixin):
