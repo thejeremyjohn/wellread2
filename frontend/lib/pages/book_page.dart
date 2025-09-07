@@ -21,15 +21,17 @@ class BookPage extends StatefulWidget {
 class _BookPageState extends State<BookPage> {
   late Future<Book> _futureBook;
   late Future<List<Review>> _futureReviews;
+  late Future<List<Bookshelf>> _futureBookshelves;
+  late String? _shelvedAt;
 
   @override
   void initState() {
     super.initState();
     _futureBook = fetchBook();
     _futureReviews = fetchReviews();
+    _futureBookshelves = fetchBookshelves();
   }
 
-  // TODO reuse fetchBooks. pre-req: refactor
   Future<Book> fetchBook() async {
     Uri endpoint = flaskUri(
       '/books',
@@ -45,9 +47,15 @@ class _BookPageState extends State<BookPage> {
 
     final r = await flaskGet(endpoint);
     if (r.isOk) {
-      return (r.data['books'] as List)
+      Book book = (r.data['books'] as List)
           .map((book) => Book.fromJson(book as Map<String, dynamic>))
           .first;
+      setState(() {
+        _shelvedAt = book.myShelves!.isNotEmpty
+            ? book.myShelves!.first.name
+            : null;
+      });
+      return book;
     } else {
       throw Exception(r.error);
     }
@@ -70,32 +78,138 @@ class _BookPageState extends State<BookPage> {
     }
   }
 
+  Future<List<Bookshelf>> fetchBookshelves() async {
+    Uri endpoint = flaskUri(
+      '/bookshelves',
+      queryParameters: {
+        'user_id': '1', // TODO user's id from login
+        'order_by': 'can_delete',
+      },
+    );
+
+    final r = await flaskGet(endpoint);
+    if (r.isOk) {
+      return (r.data['bookshelves'] as List)
+          .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw Exception(r.error);
+    }
+  }
+
+  Future<Bookshelf> bookshelfAddOrRemoveBook(
+    int bookshelfId,
+    String method,
+  ) async {
+    var flaskMethod = method == 'POST' ? flaskPost : flaskDelete;
+    Uri endpoint = flaskUri('/bookshelf/$bookshelfId/book/${widget.bookId}');
+    final r = await flaskMethod(endpoint);
+    if (r.isOk) {
+      return Bookshelf.fromJson(r.data['bookshelf'] as Map<String, dynamic>);
+    } else {
+      throw Exception(r.error);
+    }
+  }
+
+  Future<String?> addToShelf(int bookshelfId) async {
+    var shelf = await bookshelfAddOrRemoveBook(bookshelfId, 'POST');
+    setState(() => _shelvedAt = shelf.name);
+    return _shelvedAt;
+  }
+
+  Future<String?> removeFromShelf(int bookshelfId, {bool hide = false}) async {
+    await bookshelfAddOrRemoveBook(bookshelfId, 'DELETE');
+    if (!hide) setState(() => _shelvedAt = null);
+    return _shelvedAt;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget coverAndShelf = AsyncWidget(
       future: _futureBook,
       builder: (context, awaitedData) {
         Book book = awaitedData;
+
         return Column(
           children: [
             book.cover,
             SizedBox(height: kPadding),
-            // TODO myShelves should hold ONLY one of want to read, currently reading, read
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(kGreen),
-                ),
-                onPressed: () {
-                  // TODO open dialog to change shelf OR 'want to read' if unshelved
-                },
-                child: Text(
-                  book.myShelves!.isNotEmpty
-                      ? book.myShelves!.first.name
-                      : 'unshelved',
-                ),
-              ),
+            AsyncWidget(
+              future: _futureBookshelves,
+              builder: (context, awaitedData) {
+                Iterable<Bookshelf> shelves = awaitedData.take(3);
+                // Iterable<Bookshelf> tags = awaitedData.skip(3);
+
+                return SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.all(kGreen),
+                    ),
+                    onPressed: () => showDialog<String>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return StatefulBuilder(
+                          builder: (context, StateSetter dialogSetState) {
+                            return Dialog(
+                              constraints: BoxConstraints(
+                                minWidth: 300,
+                                maxWidth: 400,
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: Container(
+                                padding: const EdgeInsets.all(kPadding),
+                                child: Column(
+                                  spacing: kPadding,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Text('Choose a shelf for this book'),
+                                    ...shelves.map((shelf) {
+                                      return SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () async {
+                                            if (_shelvedAt == shelf.name) {
+                                              await removeFromShelf(shelf.id);
+                                            } else {
+                                              for (var shelfB in shelves) {
+                                                if (_shelvedAt == shelfB.name) {
+                                                  await removeFromShelf(
+                                                    shelfB.id,
+                                                    hide: true,
+                                                  );
+                                                }
+                                              }
+                                              await addToShelf(shelf.id);
+                                            }
+                                            dialogSetState(() {});
+                                          },
+                                          label: Text(shelf.name),
+                                          icon: _shelvedAt == shelf.name
+                                              ? Icon(Icons.check)
+                                              : null,
+                                        ),
+                                      );
+                                    }),
+                                    Text('Remove from my shelf'),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        // TODO tags dialog
+                                      },
+                                      child: Text('Continue to tags'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    child: Text(_shelvedAt ?? 'unshelved'),
+                  ),
+                );
+              },
             ),
             SizedBox(height: kPadding),
             RatingBar.builder(
