@@ -87,7 +87,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      // onSubmitted: (_) => FocusScope.of(context).nextFocus(), // TODO
                     ),
                     SizedBox(height: kPadding),
                     PasswordField(

@@ -27,6 +27,7 @@ class _BookPageState extends State<BookPage> {
   late Future<List<Bookshelf>> _futureBookshelves;
   int _nBookshelves = 0;
   late String? _shelvedAt;
+  double _myRating = 0;
   final _addTagsController = TextEditingController();
 
   @override
@@ -65,6 +66,7 @@ class _BookPageState extends State<BookPage> {
         _shelvedAt = book.myShelves!.isNotEmpty
             ? book.myShelves!.first.name
             : null;
+        _myRating = book.myRating!;
       });
       return book;
     } else {
@@ -78,7 +80,6 @@ class _BookPageState extends State<BookPage> {
       queryParameters: {'book_id': widget.bookId},
       addProps: ['shelves', 'user_'],
     );
-
     final r = await flaskGet(endpoint);
     if (r.isOk) {
       return (r.data['reviews'] as List)
@@ -98,7 +99,6 @@ class _BookPageState extends State<BookPage> {
         'page': page.toString(),
       },
     );
-
     final r = await flaskGet(endpoint);
     if (r.isOk) {
       List<Bookshelf> fetched = (r.data['bookshelves'] as List)
@@ -116,6 +116,24 @@ class _BookPageState extends State<BookPage> {
       }
 
       return fetched;
+    } else {
+      throw Exception(r.error);
+    }
+  }
+
+  Future<Review> reviewUpdate({required int rating, String? content}) async {
+    Uri endpoint = flaskUri('/review');
+    Map<String, dynamic> body = {
+      'book_id': widget.bookId.toString(),
+      'rating': rating.toString(),
+    };
+    if (content != null) body['content'] = content;
+    var flaskMethod = _myRating == 0 ? flaskPost : flaskPut;
+    final r = await flaskMethod(endpoint, body: body);
+    if (r.isOk) {
+      Review review = Review.fromJson(r.data['review'] as Map<String, dynamic>);
+      setState(() => _myRating = review.rating.toDouble());
+      return review;
     } else {
       throw Exception(r.error);
     }
@@ -214,6 +232,7 @@ class _BookPageState extends State<BookPage> {
         void removeFromEssentialShelf(Book book) {
           sweepingRemoveFromShelf(hide: false, deleteTags: true).then((_) {
             book.myShelves!.clear();
+            setState(() => _myRating = 0);
             if (context.mounted) context.pop();
           });
         }
@@ -411,16 +430,13 @@ class _BookPageState extends State<BookPage> {
             shelfButtonDialogs(book),
             SizedBox(height: kPadding),
             RatingBar.builder(
-              initialRating: book.myRating!,
+              initialRating: _myRating,
               minRating: 1,
               itemSize: Theme.of(context).textTheme.headlineLarge!.fontSize!,
-              itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
               itemBuilder: (context, idx) =>
                   Icon(Icons.star, color: Colors.amber),
               onRatingUpdate: (rating) {
-                // TODO review_update
-                // book.myRating = rating;
-                // setState(() {});
+                if (rating != _myRating) reviewUpdate(rating: rating.toInt());
               },
             ),
             Text('Rate this book'),
