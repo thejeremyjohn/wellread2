@@ -121,7 +121,10 @@ class _BookPageState extends State<BookPage> {
     }
   }
 
-  Future<Review> reviewUpdate({required int rating, String? content}) async {
+  Future<Review> reviewCreateOrUpdate({
+    required int rating,
+    String? content,
+  }) async {
     Uri endpoint = flaskUri('/review');
     Map<String, dynamic> body = {
       'book_id': widget.bookId.toString(),
@@ -133,6 +136,13 @@ class _BookPageState extends State<BookPage> {
     if (r.isOk) {
       Review review = Review.fromJson(r.data['review'] as Map<String, dynamic>);
       setState(() => _myRating = review.rating.toDouble());
+
+      if (_shelvedAt == null) {
+        _futureBookshelves.then((bookshelves) {
+          addToShelf(bookshelves.firstWhere((s) => s.name == 'read').id);
+        });
+      }
+
       return review;
     } else {
       throw Exception(r.error);
@@ -310,10 +320,10 @@ class _BookPageState extends State<BookPage> {
                                               child: const Text('Cancel'),
                                             ),
                                             ElevatedButton(
-                                              onPressed: () =>
-                                                  removeFromEssentialShelf(
-                                                    book,
-                                                  ),
+                                              onPressed: () {
+                                                removeFromEssentialShelf(book);
+                                                context.pop();
+                                              },
                                               child: const Text('Remove'),
                                             ),
                                           ],
@@ -436,7 +446,8 @@ class _BookPageState extends State<BookPage> {
               itemBuilder: (context, idx) =>
                   Icon(Icons.star, color: Colors.amber),
               onRatingUpdate: (rating) {
-                if (rating != _myRating) reviewUpdate(rating: rating.toInt());
+                if (rating != _myRating)
+                  reviewCreateOrUpdate(rating: rating.toInt());
               },
             ),
             Text('Rate this book'),
