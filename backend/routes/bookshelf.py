@@ -1,5 +1,6 @@
 from flask import jsonify, request
 from flask_jwt_extended import jwt_required, current_user
+from backend import util_functions
 from backend.app import app, db, Bookshelf, BookBookshelf
 
 
@@ -83,7 +84,9 @@ def bookshelf_add_or_remove_book(bookshelf_id: int, book_id: int):
     if request.method == 'POST':  # def bookshelf_add_book
         bookshelf.add_book(book_id)
     else:  # 'DELETE': def bookshelf_remove_book
-        bookshelf.remove_book(book_id)
+        delete_tags = request.args.get('delete_tags',
+                                       False, type=util_functions.string_to_bool)
+        bookshelf.remove_book(book_id, delete_tags=delete_tags)
     db.session.commit()
 
     return jsonify({

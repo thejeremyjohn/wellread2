@@ -364,18 +364,27 @@ class Bookshelf(DBModel):
         bb = BookBookshelf(book_id=book_id, bookshelf=self)
         db.session.add(bb)
 
-    def remove_book(self, book_id: int):
-        if self.name in Bookshelf.ESSENTIALS:
+    def remove_book(self, book_id: int, delete_tags: bool = False):
+        if self.name in Bookshelf.ESSENTIALS and delete_tags:
             if self.book_is_in_users_essential_shelves(book_id):
-                # remove book from every shelf of self.user
+
+                # remove book from every shelf (essentials and tags) of self.user
                 book_bookshelves = (
                     BookBookshelf.query
                     .join(Bookshelf)
                     .filter(BookBookshelf.book_id == book_id, Bookshelf.user_id == self.user_id)
                 )
-                for bb in book_bookshelves:
-                    db.session.delete(bb)
-                # # TODO? delete self.user's review of this book
+                for tag in book_bookshelves:
+                    db.session.delete(tag)
+
+                # delete self.user's review of this book
+                review = (
+                    Review.query
+                          .filter(Review.book_id == book_id, Review.user_id == self.user_id)
+                          .one_or_none()
+                )
+                if review:
+                    db.session.delete(review)
                 return
 
         bb = BookBookshelf.query.get((book_id, self.id))
