@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +8,8 @@ import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/review.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
+import 'package:wellread2frontend/widgets/column_dialog.dart';
+import 'package:wellread2frontend/widgets/rows_as_needed.dart';
 import 'package:wellread2frontend/widgets/underline.dart';
 
 class BookPage extends StatefulWidget {
@@ -166,6 +166,211 @@ class _BookPageState extends State<BookPage> {
 
   @override
   Widget build(BuildContext context) {
+    Widget shelfButtonDialogs(Book book) => AsyncWidget(
+      future: _futureBookshelves,
+      builder: (context, awaitedData) {
+        Iterable<Bookshelf> shelves = awaitedData.take(3);
+        List<Bookshelf> tags = awaitedData.skip(3).toList();
+
+        Future<void> sweepingRemoveFromShelf({bool hide = false}) async {
+          for (var shelf in shelves) {
+            if (_shelvedAt == shelf.name) {
+              await removeFromShelf(shelf.id, hide: hide);
+            }
+          }
+        }
+
+        void changeEssentialShelf(Bookshelf shelf, StateSetter stateSetter) {
+          if (_shelvedAt == shelf.name) {
+            // await removeFromShelf(shelf.id);
+            // TODO continue to tags
+          } else {
+            sweepingRemoveFromShelf(
+              hide: true,
+            ).then((_) => addToShelf(shelf.id)).then((_) => stateSetter(() {}));
+          }
+        }
+
+        void addTag(StateSetter stateSetter) async {
+          tags.add(await tagCreate(context, _addTagsController.text));
+          stateSetter(() {});
+        }
+
+        void toggleTag(Bookshelf tag, bool isTagged, StateSetter stateSetter) {
+          bookshelfAddOrRemoveBook(tag.id, isTagged ? 'DELETE' : 'POST').then((
+            shelf,
+          ) {
+            isTagged
+                ? book.myShelves!.remove(shelf)
+                : book.myShelves!.add(shelf);
+            stateSetter(() {});
+          });
+        }
+
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(kGreen),
+            ),
+            onPressed: () => showDialog<String>(
+              context: context,
+              builder: (BuildContext context) {
+                return StatefulBuilder(
+                  builder: (context, dSetState) => ColumnDialog(
+                    children: <Widget>[
+                      Text('Choose a shelf for this book'),
+                      ...shelves.map((shelf) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () =>
+                                changeEssentialShelf(shelf, dSetState),
+                            label: Text(shelf.name),
+                            icon: _shelvedAt == shelf.name
+                                ? Icon(Icons.check)
+                                : null,
+                          ),
+                        );
+                      }),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _shelvedAt == null
+                              ? null
+                              : () => showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return ColumnDialog(
+                                      children: <Widget>[
+                                        Text(
+                                          'Are you sure you want to remove this book from your shelves?',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge!
+                                              .copyWith(
+                                                fontFamily: 'LibreBaskerville',
+                                              ),
+                                        ),
+                                        const Text(
+                                          'Removing this book will clear associated ratings, reviews, and reading activity.',
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceAround,
+                                          children: <Widget>[
+                                            ElevatedButton(
+                                              onPressed: () => context.pop(),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                context.pop();
+                                                await sweepingRemoveFromShelf(
+                                                  hide: false,
+                                                );
+                                              },
+                                              child: const Text('Remove'),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                          style: ElevatedButton.styleFrom(
+                            iconColor: Colors.red,
+                          ),
+                          label: const Text('Remove from my shelf'),
+                          icon: Icon(Icons.remove_circle_outline),
+                        ),
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return StatefulBuilder(
+                                  builder: (context, dSetState) => ColumnDialog(
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        spacing: kPadding,
+                                        children: <Widget>[
+                                          SizedBox(
+                                            width: 200,
+                                            height: kTextTabBarHeight,
+                                            child: TextField(
+                                              controller: _addTagsController,
+                                              decoration: InputDecoration(
+                                                labelText: 'Add tags',
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        kTextTabBarHeight * 0.5,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () => addTag(dSetState),
+                                            child: const Text(
+                                              'Add',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Column(
+                                        spacing: kPadding,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: rowsAsNeeded(tags, (tag) {
+                                          bool isTagged = book.myShelves!
+                                              .contains(tag);
+
+                                          return ElevatedButton(
+                                            onPressed: () => toggleTag(
+                                              tag,
+                                              isTagged,
+                                              dSetState,
+                                            ),
+                                            style: isTagged
+                                                ? ElevatedButton.styleFrom(
+                                                    backgroundColor: kGreen,
+                                                  )
+                                                : null,
+                                            child: Text(tag.name),
+                                          );
+                                        }),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: Text('Continue to tags'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            child: Text(_shelvedAt ?? 'unshelved'),
+          ),
+        );
+      },
+    );
+
     Widget coverAndShelf = AsyncWidget(
       future: _futureBook,
       builder: (context, awaitedData) {
@@ -175,324 +380,7 @@ class _BookPageState extends State<BookPage> {
           children: [
             book.cover,
             SizedBox(height: kPadding),
-            AsyncWidget(
-              future: _futureBookshelves,
-              builder: (context, awaitedData) {
-                Iterable<Bookshelf> shelves = awaitedData.take(3);
-                List<Bookshelf> tags = awaitedData.skip(3).toList();
-
-                Future<void> sweepingRemoveFromShelf({
-                  bool hide = false,
-                }) async {
-                  for (var shelf in shelves) {
-                    if (_shelvedAt == shelf.name) {
-                      await removeFromShelf(shelf.id, hide: hide);
-                    }
-                  }
-                }
-
-                return SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(kGreen),
-                    ),
-                    onPressed: () => showDialog<String>(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return StatefulBuilder(
-                          builder: (context, StateSetter dialogSetState) {
-                            return Dialog(
-                              constraints: BoxConstraints(
-                                minWidth: 300,
-                                maxWidth: 400,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(kPadding),
-                                child: Column(
-                                  spacing: kPadding,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Text('Choose a shelf for this book'),
-                                    ...shelves.map((shelf) {
-                                      return SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () async {
-                                            if (_shelvedAt == shelf.name) {
-                                              // await removeFromShelf(shelf.id);
-                                              // TODO continue to tags
-                                            } else {
-                                              await sweepingRemoveFromShelf(
-                                                hide: true,
-                                              );
-                                              await addToShelf(shelf.id);
-                                            }
-                                            dialogSetState(() {});
-                                          },
-                                          label: Text(shelf.name),
-                                          icon: _shelvedAt == shelf.name
-                                              ? Icon(Icons.check)
-                                              : null,
-                                        ),
-                                      );
-                                    }),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        onPressed: _shelvedAt == null
-                                            ? null
-                                            : () => showDialog(
-                                                context: context,
-                                                builder: (BuildContext context) {
-                                                  return Dialog(
-                                                    constraints: BoxConstraints(
-                                                      minWidth: 300,
-                                                      maxWidth: 400,
-                                                    ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            kPadding,
-                                                          ),
-                                                      child: Column(
-                                                        spacing: kPadding,
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: <Widget>[
-                                                          Text(
-                                                            'Are you sure you want to remove this book from your shelves?',
-                                                            style: Theme.of(context)
-                                                                .textTheme
-                                                                .titleLarge!
-                                                                .copyWith(
-                                                                  fontFamily:
-                                                                      'LibreBaskerville',
-                                                                ),
-                                                          ),
-                                                          const Text(
-                                                            'Removing this book will clear associated ratings, reviews, and reading activity.',
-                                                          ),
-                                                          Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceAround,
-                                                            children: <Widget>[
-                                                              ElevatedButton(
-                                                                onPressed: () {
-                                                                  context.pop();
-                                                                },
-                                                                child:
-                                                                    const Text(
-                                                                      'Cancel',
-                                                                    ),
-                                                              ),
-                                                              ElevatedButton(
-                                                                onPressed: () async {
-                                                                  context.pop();
-                                                                  await sweepingRemoveFromShelf(
-                                                                    hide: false,
-                                                                  );
-                                                                },
-                                                                child:
-                                                                    const Text(
-                                                                      'Remove',
-                                                                    ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                        style: ElevatedButton.styleFrom(
-                                          iconColor: Colors.red,
-                                        ),
-                                        label: const Text(
-                                          'Remove from my shelf',
-                                        ),
-                                        icon: Icon(Icons.remove_circle_outline),
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return StatefulBuilder(
-                                                builder: (context, StateSetter setState) {
-                                                  return Dialog(
-                                                    constraints: BoxConstraints(
-                                                      minWidth: 300,
-                                                      maxWidth: 400,
-                                                    ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            kPadding,
-                                                          ),
-                                                      child: Column(
-                                                        spacing: kPadding,
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .center,
-                                                            spacing: kPadding,
-                                                            children: <Widget>[
-                                                              SizedBox(
-                                                                width: 200,
-                                                                height:
-                                                                    kTextTabBarHeight,
-                                                                child: TextField(
-                                                                  controller:
-                                                                      _addTagsController,
-                                                                  decoration: InputDecoration(
-                                                                    labelText:
-                                                                        'Add tags',
-                                                                    border: OutlineInputBorder(
-                                                                      borderRadius: BorderRadius.circular(
-                                                                        kTextTabBarHeight *
-                                                                            0.5,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              ElevatedButton(
-                                                                onPressed: () async {
-                                                                  tags.add(
-                                                                    await tagCreate(
-                                                                      context,
-                                                                      _addTagsController
-                                                                          .text,
-                                                                    ),
-                                                                  );
-                                                                  setState(
-                                                                    () {},
-                                                                  );
-                                                                },
-                                                                child: const Text(
-                                                                  'Add',
-                                                                  style: TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          Column(
-                                                            spacing: kPadding,
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: <Widget>[
-                                                              for (
-                                                                var i = 0;
-                                                                i < tags.length;
-                                                                i += 3
-                                                              )
-                                                                Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .max,
-                                                                  crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .center,
-                                                                  spacing:
-                                                                      kPadding,
-                                                                  children: <Widget>[
-                                                                    ...tags
-                                                                        .sublist(
-                                                                          i,
-                                                                          min(
-                                                                            i + 3,
-                                                                            tags.length,
-                                                                          ),
-                                                                        )
-                                                                        .map((
-                                                                          tag,
-                                                                        ) {
-                                                                          bool
-                                                                          isTagged = book.myShelves!.contains(
-                                                                            tag,
-                                                                          );
-
-                                                                          return ElevatedButton(
-                                                                            onPressed: () {
-                                                                              bookshelfAddOrRemoveBook(
-                                                                                tag.id,
-                                                                                isTagged
-                                                                                    ? 'DELETE'
-                                                                                    : 'POST',
-                                                                              ).then(
-                                                                                (
-                                                                                  shelf,
-                                                                                ) {
-                                                                                  isTagged
-                                                                                      ? book.myShelves!.remove(
-                                                                                          shelf,
-                                                                                        )
-                                                                                      : book.myShelves!.add(
-                                                                                          shelf,
-                                                                                        );
-                                                                                  setState(
-                                                                                    () {},
-                                                                                  );
-                                                                                },
-                                                                              );
-                                                                            },
-                                                                            style:
-                                                                                isTagged
-                                                                                ? ElevatedButton.styleFrom(
-                                                                                    backgroundColor: kGreen,
-                                                                                  )
-                                                                                : null,
-                                                                            child: Text(
-                                                                              tag.name,
-                                                                            ),
-                                                                          );
-                                                                        }),
-                                                                  ],
-                                                                ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          );
-                                        },
-                                        child: Text('Continue to tags'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    child: Text(_shelvedAt ?? 'unshelved'),
-                  ),
-                );
-              },
-            ),
+            shelfButtonDialogs(book),
             SizedBox(height: kPadding),
             RatingBar.builder(
               initialRating: book.myRating!,
