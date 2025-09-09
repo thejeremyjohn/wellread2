@@ -123,11 +123,14 @@ class _BookPageState extends State<BookPage> {
 
   Future<Bookshelf> bookshelfAddOrRemoveBook(
     int bookshelfId,
-    String method,
-  ) async {
+    String method, {
+    bool deleteTags = false,
+  }) async {
     var flaskMethod = method == 'POST' ? flaskPost : flaskDelete;
-    // TODO delete_tags option
-    Uri endpoint = flaskUri('/bookshelf/$bookshelfId/book/${widget.bookId}');
+    Uri endpoint = flaskUri(
+      '/bookshelf/$bookshelfId/book/${widget.bookId}',
+      queryParameters: {'delete_tags': deleteTags.toString()},
+    );
     final r = await flaskMethod(endpoint);
     if (r.isOk) {
       return Bookshelf.fromJson(r.data['bookshelf'] as Map<String, dynamic>);
@@ -142,8 +145,16 @@ class _BookPageState extends State<BookPage> {
     return _shelvedAt;
   }
 
-  Future<String?> removeFromShelf(int bookshelfId, {bool hide = false}) async {
-    await bookshelfAddOrRemoveBook(bookshelfId, 'DELETE');
+  Future<String?> removeFromShelf(
+    int bookshelfId, {
+    bool hide = false,
+    bool deleteTags = false,
+  }) async {
+    await bookshelfAddOrRemoveBook(
+      bookshelfId,
+      'DELETE',
+      deleteTags: deleteTags,
+    );
     if (!hide) setState(() => _shelvedAt = null);
     return _shelvedAt;
   }
@@ -172,23 +183,39 @@ class _BookPageState extends State<BookPage> {
         Iterable<Bookshelf> shelves = awaitedData.take(3);
         List<Bookshelf> tags = awaitedData.skip(3).toList();
 
-        Future<void> sweepingRemoveFromShelf({bool hide = false}) async {
+        Future<void> sweepingRemoveFromShelf({
+          bool hide = false,
+          bool deleteTags = false,
+        }) async {
           for (var shelf in shelves) {
             if (_shelvedAt == shelf.name) {
-              await removeFromShelf(shelf.id, hide: hide);
+              await removeFromShelf(
+                shelf.id,
+                hide: hide,
+                deleteTags: deleteTags,
+              );
             }
           }
         }
 
-        void changeEssentialShelf(Bookshelf shelf, StateSetter stateSetter) {
-          if (_shelvedAt == shelf.name) {
-            // await removeFromShelf(shelf.id);
-            // TODO continue to tags
-          } else {
+        void changeEssentialShelf(
+          Bookshelf shelf,
+          StateSetter stateSetter, {
+          bool deleteTags = false,
+        }) {
+          if (_shelvedAt != shelf.name) {
             sweepingRemoveFromShelf(
               hide: true,
+              deleteTags: deleteTags,
             ).then((_) => addToShelf(shelf.id)).then((_) => stateSetter(() {}));
           }
+        }
+
+        void removeFromEssentialShelf(Book book) {
+          sweepingRemoveFromShelf(hide: false, deleteTags: true).then((_) {
+            book.myShelves!.clear();
+            if (context.mounted) context.pop();
+          });
         }
 
         void addTag(StateSetter stateSetter) async {
@@ -253,7 +280,7 @@ class _BookPageState extends State<BookPage> {
                                               ),
                                         ),
                                         const Text(
-                                          'Removing this book will clear associated ratings, reviews, and reading activity.',
+                                          'Removing this book will clear associated ratings, reviews, and tags.',
                                         ),
                                         Row(
                                           mainAxisAlignment:
@@ -264,12 +291,10 @@ class _BookPageState extends State<BookPage> {
                                               child: const Text('Cancel'),
                                             ),
                                             ElevatedButton(
-                                              onPressed: () async {
-                                                context.pop();
-                                                await sweepingRemoveFromShelf(
-                                                  hide: false,
-                                                );
-                                              },
+                                              onPressed: () =>
+                                                  removeFromEssentialShelf(
+                                                    book,
+                                                  ),
                                               child: const Text('Remove'),
                                             ),
                                           ],
@@ -288,75 +313,78 @@ class _BookPageState extends State<BookPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return StatefulBuilder(
-                                  builder: (context, dSetState) => ColumnDialog(
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        spacing: kPadding,
-                                        children: <Widget>[
-                                          SizedBox(
-                                            width: 200,
-                                            height: kTextTabBarHeight,
-                                            child: TextField(
-                                              controller: _addTagsController,
-                                              decoration: InputDecoration(
-                                                labelText: 'Add tags',
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                        kTextTabBarHeight * 0.5,
-                                                      ),
+                          onPressed: _shelvedAt == null
+                              ? null
+                              : () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => StatefulBuilder(
+                                      builder: (context, dSetState) => ColumnDialog(
+                                        children: [
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            spacing: kPadding,
+                                            children: <Widget>[
+                                              SizedBox(
+                                                width: 200,
+                                                height: kTextTabBarHeight,
+                                                child: TextField(
+                                                  controller:
+                                                      _addTagsController,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Add tags',
+                                                    border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            kTextTabBarHeight *
+                                                                0.5,
+                                                          ),
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () => addTag(dSetState),
-                                            child: const Text(
-                                              'Add',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                              ElevatedButton(
+                                                onPressed: () =>
+                                                    addTag(dSetState),
+                                                child: const Text(
+                                                  'Add',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                               ),
-                                            ),
+                                            ],
+                                          ),
+                                          Column(
+                                            spacing: kPadding,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: rowsAsNeeded(tags, (tag) {
+                                              bool isTagged = book.myShelves!
+                                                  .contains(tag);
+
+                                              return ElevatedButton(
+                                                onPressed: () => toggleTag(
+                                                  tag,
+                                                  isTagged,
+                                                  dSetState,
+                                                ),
+                                                style: isTagged
+                                                    ? ElevatedButton.styleFrom(
+                                                        backgroundColor: kGreen,
+                                                      )
+                                                    : null,
+                                                child: Text(tag.name),
+                                              );
+                                            }),
                                           ),
                                         ],
                                       ),
-                                      Column(
-                                        spacing: kPadding,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: rowsAsNeeded(tags, (tag) {
-                                          bool isTagged = book.myShelves!
-                                              .contains(tag);
-
-                                          return ElevatedButton(
-                                            onPressed: () => toggleTag(
-                                              tag,
-                                              isTagged,
-                                              dSetState,
-                                            ),
-                                            style: isTagged
-                                                ? ElevatedButton.styleFrom(
-                                                    backgroundColor: kGreen,
-                                                  )
-                                                : null,
-                                            child: Text(tag.name),
-                                          );
-                                        }),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          },
+                                    ),
+                                  );
+                                },
                           child: Text('Continue to tags'),
                         ),
                       ),
