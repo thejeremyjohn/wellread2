@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
 import 'package:wellread2frontend/pages/book_page.dart';
@@ -9,13 +10,19 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/forgot_pw_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
+import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
 void main() {
   usePathUrlStrategy(); // remove '#' from paths
   GoRouter.optionURLReflectsImperativeAPIs =
       true; // ctx.push(...) updates path (same as ctx.go(...))
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (context) => UserState())],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -37,7 +44,8 @@ class _MyAppState extends State<MyApp> {
         GoRoute(path: '/', redirect: (_, __) => '/books'),
         GoRoute(
           path: '/login',
-          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
+          redirect: (_, __) async =>
+              await isLoggedIn(context) ? '/books' : null,
           builder: (context, state) => SelectionArea(child: const LoginPage()),
         ),
         GoRoute(
@@ -51,12 +59,14 @@ class _MyAppState extends State<MyApp> {
         ),
         GoRoute(
           path: '/signup',
-          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
+          redirect: (_, __) async =>
+              await isLoggedIn(context) ? '/books' : null,
           builder: (context, state) => SelectionArea(child: const SignupPage()),
         ),
         GoRoute(
           path: '/verify',
-          redirect: (_, __) async => await isLoggedIn() ? '/books' : null,
+          redirect: (_, __) async =>
+              await isLoggedIn(context) ? '/books' : null,
           builder: (context, state) => SelectionArea(
             child: VerifyPage(token: state.uri.queryParameters['token']),
           ),
@@ -66,7 +76,8 @@ class _MyAppState extends State<MyApp> {
           builder: (context, state, child) => SelectionArea(
             child: Scaffold(appBar: WellreadAppBar(), body: child),
           ),
-          redirect: (_, __) async => await isLoggedIn() ? null : '/login',
+          redirect: (_, __) async =>
+              await isLoggedIn(context) ? null : '/login',
           routes: <RouteBase>[
             GoRoute(
               path: '/books',
@@ -79,8 +90,10 @@ class _MyAppState extends State<MyApp> {
             ),
             GoRoute(
               path: '/book/:bookId',
-              builder: (context, state) =>
-                  BookPage(bookId: state.pathParameters['bookId']!),
+              builder: (context, state) => BookPage(
+                bookId: state.pathParameters['bookId']!,
+                // userId: (state.extra as Map?)?['userId'],
+              ),
             ),
           ],
         ),

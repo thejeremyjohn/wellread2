@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/review.dart';
+import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/column_dialog.dart';
@@ -14,7 +16,6 @@ import 'package:wellread2frontend/widgets/underline.dart';
 
 class BookPage extends StatefulWidget {
   const BookPage({super.key, required this.bookId});
-
   final String bookId;
 
   @override
@@ -22,6 +23,7 @@ class BookPage extends StatefulWidget {
 }
 
 class _BookPageState extends State<BookPage> {
+  late int _myUserId;
   late Future<Book> _futureBook;
   late Future<List<Review>> _futureReviews;
   late Future<List<Bookshelf>> _futureBookshelves;
@@ -33,6 +35,7 @@ class _BookPageState extends State<BookPage> {
   @override
   void initState() {
     super.initState();
+    _myUserId = context.read<UserState>().user.id;
     _futureBook = fetchBook();
     _futureReviews = fetchReviews();
     _futureBookshelves = fetchBookshelves();
@@ -94,7 +97,7 @@ class _BookPageState extends State<BookPage> {
     Uri endpoint = flaskUri(
       '/bookshelves',
       queryParameters: {
-        'user_id': '1', // TODO user's id from login
+        'user_id': _myUserId.toString(),
         'order_by': 'can_delete',
         'page': page.toString(),
       },
@@ -446,8 +449,9 @@ class _BookPageState extends State<BookPage> {
               itemBuilder: (context, idx) =>
                   Icon(Icons.star, color: Colors.amber),
               onRatingUpdate: (rating) {
-                if (rating != _myRating)
+                if (rating != _myRating) {
                   reviewCreateOrUpdate(rating: rating.toInt());
+                }
               },
             ),
             Text('Rate this book'),

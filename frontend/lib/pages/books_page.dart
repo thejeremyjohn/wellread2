@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
+import 'package:wellread2frontend/providers/user_state.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key, this.page, this.orderBy, this.reverse});
@@ -136,7 +138,7 @@ class _BooksPageState extends State<BooksPage> {
               Container(
                 margin: EdgeInsets.all(kPadding),
                 child: Text(
-                  'My Books',
+                  '${context.watch<UserState>().user.firstName}\'s Books',
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontFamily: 'LibreBaskerville',
                     fontWeight: FontWeight.w600,
