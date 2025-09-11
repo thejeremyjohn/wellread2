@@ -376,55 +376,72 @@ class _BookPageState extends State<BookPage> {
                                                   ),
                                                 ),
                                               ),
-                                              ElevatedButton(
-                                                onPressed: () =>
-                                                    addTag(dSetState),
-                                                child: const Text(
-                                                  'Add',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
+                                              SizedBox(
+                                                height: kTextTabBarHeight,
+                                                child: ElevatedButton(
+                                                  onPressed: () =>
+                                                      addTag(dSetState),
+                                                  child: const Text(
+                                                    'Add',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          Column(
-                                            spacing: kPadding,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: rowsAsNeeded(tags, (tag) {
-                                              bool isTagged = book.myShelves!
-                                                  .contains(tag);
-                                              // toggleTag button for each tag
-                                              return ConstrainedBox(
-                                                constraints: BoxConstraints(
-                                                  maxWidth: 100,
-                                                ),
-                                                child: ElevatedButton(
-                                                  onPressed: () => toggleTag(
-                                                    tag,
-                                                    isTagged,
-                                                    dSetState,
-                                                  ),
-                                                  style: isTagged
-                                                      ? ElevatedButton.styleFrom(
-                                                          backgroundColor:
-                                                              kGreen,
-                                                        )
-                                                      : null,
-                                                  child: Tooltip(
-                                                    message:
-                                                        'toggle ${tag.name}',
-                                                    child: Text(
-                                                      tag.name,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      maxLines: 1,
+                                          ConstrainedBox(
+                                            constraints: BoxConstraints(
+                                              minHeight: 300,
+                                              maxHeight: 600,
+                                            ),
+                                            child: ListView(
+                                              shrinkWrap: true,
+                                              children: rowsAsNeeded(tags, (
+                                                tag,
+                                              ) {
+                                                bool isTagged = book.myShelves!
+                                                    .contains(tag);
+                                                // toggleTag button for each tag
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        top: kPadding,
+                                                      ),
+                                                  child: ConstrainedBox(
+                                                    constraints: BoxConstraints(
+                                                      maxWidth: 100,
+                                                    ),
+                                                    child: ElevatedButton(
+                                                      onPressed: () =>
+                                                          toggleTag(
+                                                            tag,
+                                                            isTagged,
+                                                            dSetState,
+                                                          ),
+                                                      style: isTagged
+                                                          ? ElevatedButton.styleFrom(
+                                                              backgroundColor:
+                                                                  kGreen,
+                                                            )
+                                                          : null,
+                                                      child: Tooltip(
+                                                        message:
+                                                            'toggle ${tag.name}',
+                                                        child: Text(
+                                                          tag.name,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          maxLines: 1,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              );
-                                            }),
+                                                );
+                                              }),
+                                            ),
                                           ),
                                         ],
                                       ),
