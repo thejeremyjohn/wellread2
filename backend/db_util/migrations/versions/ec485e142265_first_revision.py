@@ -28,8 +28,8 @@ def upgrade():
 
         CREATE TABLE users (
             id int NOT NULL PRIMARY KEY,
-            first_name TEXT NOT NULL,
-            last_name TEXT,
+            first_name TEXT CHECK (char_length(first_name) > 0) NOT NULL,
+            last_name TEXT CHECK (char_length(last_name) > 0),
             email TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL
         );
@@ -44,8 +44,8 @@ def upgrade():
 
         CREATE TABLE books (
             id int NOT NULL PRIMARY KEY,
-            author TEXT NOT NULL,
-            title TEXT NOT NULL,
+            author TEXT CHECK (char_length(author) > 0) NOT NULL,
+            title TEXT CHECK (char_length(title) > 0) NOT NULL,
             description TEXT
         );
         ALTER TABLE books
@@ -72,7 +72,7 @@ def upgrade():
         CREATE TABLE bookshelves (
             id int NOT NULL PRIMARY KEY,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-            name TEXT NOT NULL,
+            name TEXT CHECK (char_length(name) > 0) NOT NULL,
             can_delete BOOLEAN DEFAULT false
         );
         ALTER TABLE bookshelves
