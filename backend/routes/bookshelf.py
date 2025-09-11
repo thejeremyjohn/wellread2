@@ -12,9 +12,10 @@ def bookshelf_create():
     db.session.add(bookshelf)
     db.session.commit()
 
+    bookshelf = bookshelf.attrs_(add_props=request.add_props, expand=request.expand)
     return jsonify({
         'status': 'ok', 'error': None,
-        'bookshelf': bookshelf.attrs,
+        'bookshelf': bookshelf,
     })
 
 

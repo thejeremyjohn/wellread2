@@ -368,7 +368,7 @@ class Bookshelf(DBModel):
         if self.name in Bookshelf.ESSENTIALS and delete_tags:
             if self.book_is_in_users_essential_shelves(book_id):
 
-                # remove book from every shelf (essentials and tags) of self.user
+                # remove self from all of self.user's bookshelves -- essentials and tags
                 book_bookshelves = (
                     BookBookshelf.query
                     .join(Bookshelf)
@@ -377,7 +377,7 @@ class Bookshelf(DBModel):
                 for tag in book_bookshelves:
                     db.session.delete(tag)
 
-                # delete self.user's review of this book
+                # delete self.user's review of self
                 review = (
                     Review.query
                           .filter(Review.book_id == book_id, Review.user_id == self.user_id)

@@ -55,7 +55,7 @@ book3 = Book(
 )
 books = [book1, book2, book3]
 
-for _ in range(fake.random.randint(30, 100)):
+for _ in range(fake.random.randint(100, 200)):
     books.append(
         Book(
             title=fake.sentence(nb_words=fake.random.randint(1, 5)).rstrip('.').title(),
