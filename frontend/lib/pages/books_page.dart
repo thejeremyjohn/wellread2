@@ -5,7 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
+import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
+import 'package:wellread2frontend/widgets/async_widget.dart';
+import 'package:wellread2frontend/widgets/clickable.dart';
+import 'package:wellread2frontend/widgets/text_underline_on_hover.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({super.key, this.page, this.orderBy, this.reverse});
@@ -18,6 +22,8 @@ class BooksPage extends StatefulWidget {
 }
 
 class _BooksPageState extends State<BooksPage> {
+  late int _myUserId;
+  late Future<List<Bookshelf>> _futureBookshelves;
   late int _page;
   late String _orderBy;
   late bool _reverse;
@@ -30,6 +36,8 @@ class _BooksPageState extends State<BooksPage> {
   @override
   void initState() {
     super.initState();
+    _myUserId = context.read<UserState>().user.id;
+    _futureBookshelves = fetchBookshelves();
     _page = (widget.page as int?) ?? 0;
     _orderBy = widget.orderBy ?? 'title';
     _reverse = bool.tryParse(widget.reverse ?? 'false')!;
@@ -76,6 +84,58 @@ class _BooksPageState extends State<BooksPage> {
   ];
   double myShelvesWidthModifier = 0.15;
   double dataRowHeight = 128;
+
+  Future<List<Bookshelf>> fetchBookshelves({int page = 1}) async {
+    Uri endpoint = flaskUri(
+      '/bookshelves',
+      queryParameters: {
+        'user_id': _myUserId.toString(),
+        'order_by': 'can_delete',
+        'page': page.toString(),
+      },
+      addProps: ['n_books'],
+    );
+    final r = await flaskGet(endpoint);
+    if (r.isOk) {
+      List<Bookshelf> fetched = (r.data['bookshelves'] as List)
+          .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
+          .toList();
+
+      if (fetched.isNotEmpty) {
+        _futureBookshelves.then((fetchedSoFar) {
+          page = (r.data['page'] as int) + 1;
+          fetchBookshelves(page: page).then((subsequentFetch) {
+            fetchedSoFar.addAll(subsequentFetch);
+            setState(() {});
+          });
+        });
+      }
+
+      return fetched;
+    } else {
+      throw Exception(r.error);
+    }
+  }
+
+  Future<Bookshelf> tagCreate(BuildContext context, String name) async {
+    Uri endpoint = flaskUri(
+      '/bookshelf',
+      queryParameters: {},
+      addProps: ['n_books'],
+    );
+    final r = await flaskPost(endpoint, body: {'name': name});
+    if (r.isOk) {
+      Bookshelf tag = Bookshelf.fromJson(
+        r.data['bookshelf'] as Map<String, dynamic>,
+      );
+      _futureBookshelves.then((bookshelves) => bookshelves.add(tag));
+      setState(() {});
+      return tag;
+    } else {
+      if (context.mounted) r.showSnackBar(context);
+      throw Exception(r.error);
+    }
+  }
 
   Future<List<Book>> fetchBooks() async {
     Uri endpoint = flaskUri(
@@ -152,7 +212,35 @@ class _BooksPageState extends State<BooksPage> {
                   Container(
                     margin: EdgeInsets.all(kPadding),
                     width: constraints.maxWidth * myShelvesWidthModifier,
-                    child: Text('[My Shelves]', textAlign: TextAlign.center),
+                    child: AsyncWidget(
+                      future: _futureBookshelves,
+                      builder: (context, bookshelves) {
+                        Iterable<Bookshelf> shelves = bookshelves.take(3);
+                        List<Bookshelf> tags = bookshelves.skip(3).toList();
+                        tags.sort((a, b) => a.name.compareTo(b.name));
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Bookshelves',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'All (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            ...shelves.map((s) => ShelfRow(shelf: s)),
+                            Divider(height: kPadding),
+                            ...tags.map((s) => ShelfRow(shelf: s)),
+                            SizedBox(height: kPadding * 0.5),
+                            AddShelf(
+                              onAdd: (tagName) => tagCreate(context, tagName),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                   Expanded(
                     child: DataTable(
@@ -242,5 +330,89 @@ class _BooksPageState extends State<BooksPage> {
         },
       ),
     );
+  }
+}
+
+class ShelfRow extends StatelessWidget {
+  const ShelfRow({super.key, required this.shelf});
+
+  final Bookshelf shelf;
+
+  @override
+  Widget build(BuildContext context) {
+    return Clickable(
+      onClick: () {
+        // goto ShelfPage
+      },
+      child: TextUnderlineOnHover('${shelf.name} (${shelf.nBooks})'),
+    );
+  }
+}
+
+class AddShelf extends StatefulWidget {
+  const AddShelf({super.key, required this.onAdd});
+  final Future Function(String) onAdd;
+
+  @override
+  State<AddShelf> createState() => _AddShelfState();
+}
+
+class _AddShelfState extends State<AddShelf> {
+  bool _firstClicked = false;
+  void submitFirstForm() {
+    setState(() => _firstClicked = true);
+  }
+
+  final TextEditingController _controller = TextEditingController();
+  void submitSecondForm() {
+    widget.onAdd(_controller.text).then((_) {
+      _controller.clear();
+      _firstClicked = false;
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return !_firstClicked
+        ? ElevatedButton(onPressed: submitFirstForm, child: Text('Add shelf'))
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(height: kPadding),
+              Text(
+                'Add a Shelf:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 100,
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
+                        border: OutlineInputBorder(borderSide: BorderSide()),
+                      ),
+                      onSubmitted: (_) => submitSecondForm(),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: submitSecondForm,
+                    child: Text('add'),
+                  ),
+                ],
+              ),
+            ],
+          );
   }
 }
