@@ -137,13 +137,17 @@ class _BookPageState extends State<BookPage> {
     final r = await flaskMethod(endpoint, body: body);
     if (r.isOk) {
       Review review = Review.fromJson(r.data['review'] as Map<String, dynamic>);
-      setState(() => _myRating = review.rating.toDouble());
 
-      if (_shelvedAt == null) {
-        _futureBookshelves.then((bookshelves) {
-          addToShelf(bookshelves.firstWhere((s) => s.name == 'read').id);
-        });
-      }
+      setState(() {
+        // fetch book for updated ratings
+        _futureBook = fetchBook();
+
+        if (_shelvedAt == null) {
+          _futureBookshelves.then((bookshelves) {
+            addToShelf(bookshelves.firstWhere((s) => s.name == 'read').id);
+          });
+        }
+      });
 
       return review;
     } else {
@@ -244,8 +248,9 @@ class _BookPageState extends State<BookPage> {
         void removeFromEssentialShelf(Book book) {
           sweepingRemoveFromShelf(hide: false, deleteTags: true).then((_) {
             book.myShelves!.clear();
-            setState(() => _myRating = 0);
             if (context.mounted) context.pop();
+            // fetch book for updated ratings
+            setState(() => _futureBook = fetchBook());
           });
         }
 

@@ -342,7 +342,7 @@ class ShelfRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Clickable(
       onClick: () {
-        // goto ShelfPage
+        // TODO goto ShelfPage
       },
       child: TextUnderlineOnHover('${shelf.name} (${shelf.nBooks})'),
     );
