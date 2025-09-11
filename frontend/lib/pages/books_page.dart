@@ -107,11 +107,11 @@ class _BooksPageState extends State<BooksPage> {
 
   @override
   void didUpdateWidget(covariant BooksPage oldWidget) {
-    fetchUntilScrollable();
+    fetchBooksUntilScrollable();
     super.didUpdateWidget(oldWidget);
   }
 
-  void fetchUntilScrollable() {
+  void fetchBooksUntilScrollable() {
     /// attempting to load rows beyond the viewport
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isScrollable &&

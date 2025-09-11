@@ -27,7 +27,6 @@ class _BookPageState extends State<BookPage> {
   late Future<Book> _futureBook;
   late Future<List<Review>> _futureReviews;
   late Future<List<Bookshelf>> _futureBookshelves;
-  int _nBookshelves = 0;
   late String? _shelvedAt;
   double _myRating = 0;
   final _addTagsController = TextEditingController();
@@ -108,13 +107,13 @@ class _BookPageState extends State<BookPage> {
           .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
           .toList();
 
-      _nBookshelves += fetched.length;
-      setState(() {});
-      if (_nBookshelves < r.data['total_count']) {
-        _futureBookshelves.then((bookshelves) async {
-          bookshelves.addAll(
-            await fetchBookshelves(page: (r.data['page'] as int) + 1),
-          );
+      if (fetched.isNotEmpty) {
+        _futureBookshelves.then((fetchedSoFar) {
+          page = (r.data['page'] as int) + 1;
+          fetchBookshelves(page: page).then((subsequentFetch) {
+            fetchedSoFar.addAll(subsequentFetch);
+            setState(() {});
+          });
         });
       }
 
@@ -396,19 +395,34 @@ class _BookPageState extends State<BookPage> {
                                             children: rowsAsNeeded(tags, (tag) {
                                               bool isTagged = book.myShelves!
                                                   .contains(tag);
-
-                                              return ElevatedButton(
-                                                onPressed: () => toggleTag(
-                                                  tag,
-                                                  isTagged,
-                                                  dSetState,
+                                              // toggleTag button for each tag
+                                              return ConstrainedBox(
+                                                constraints: BoxConstraints(
+                                                  maxWidth: 100,
                                                 ),
-                                                style: isTagged
-                                                    ? ElevatedButton.styleFrom(
-                                                        backgroundColor: kGreen,
-                                                      )
-                                                    : null,
-                                                child: Text(tag.name),
+                                                child: ElevatedButton(
+                                                  onPressed: () => toggleTag(
+                                                    tag,
+                                                    isTagged,
+                                                    dSetState,
+                                                  ),
+                                                  style: isTagged
+                                                      ? ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              kGreen,
+                                                        )
+                                                      : null,
+                                                  child: Tooltip(
+                                                    message:
+                                                        'toggle ${tag.name}',
+                                                    child: Text(
+                                                      tag.name,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 1,
+                                                    ),
+                                                  ),
+                                                ),
                                               );
                                             }),
                                           ),
