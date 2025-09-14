@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
@@ -10,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/forgot_pw_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
+import 'package:wellread2frontend/providers/book_page_state.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
@@ -18,9 +20,14 @@ void main() {
   GoRouter.optionURLReflectsImperativeAPIs =
       true; // ctx.push(...) updates path (same as ctx.go(...))
   runApp(
-    MultiProvider(
-      providers: [ChangeNotifierProvider(create: (context) => UserState())],
-      child: const MyApp(),
+    ProviderScope(
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => UserState()),
+          ChangeNotifierProvider(create: (context) => BookPageState()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }

@@ -10,7 +10,13 @@
 analyzer:
   errors:
     avoid_print: ignore
+  plugins:
+    - custom_lint
 include: package:flutter_lints/flutter.yaml
+
+custom_lint:
+  rules:
+    - provider_parameters
 
 linter:
   # The lint rules applied to this project can be customized in the

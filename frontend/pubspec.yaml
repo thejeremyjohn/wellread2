@@ -43,6 +43,7 @@ dependencies:
   flutter_rating_bar: ^4.0.1
   equatable: ^2.0.7
   provider: ^6.1.5+1
+  flutter_riverpod: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +55,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  custom_lint: ^0.8.0
+  riverpod_lint: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
