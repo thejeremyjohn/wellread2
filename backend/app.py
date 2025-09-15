@@ -44,7 +44,7 @@ def mk_cloudfront_signer(key_id='', key_file_path=''):
 app = Flask(__name__)
 app.request_class = CustomRequest
 app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)  # default minutes=15
+# app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=10)  # default minutes=15
 # app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 app.config['SQLALCHEMY_DATABASE_URI'] = ('postgresql+psycopg://'
                                          + os.environ['SQL_DB_USER']
