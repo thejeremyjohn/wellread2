@@ -1,3 +1,6 @@
+# Usage:
+# flask --app backend.app run
+# gunicorn backend.app:app
 import os
 import re
 import sys

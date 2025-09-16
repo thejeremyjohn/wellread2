@@ -1,0 +1,15 @@
+# This systemd unit file allows you to start the wellread server on boot
+# Save it to /etc/systemd/system/wellread.service
+# Make it executable with chmod +x /etc/systemd/system/wellread.service
+# Enable it with systemctl enable wellread.service
+# Start it with systemctl start wellread.service
+
+[Unit]
+Description=wellread
+
+[Service]
+User=ubuntu
+ExecStart=/usr/local/sbin/wellread.sh
+
+[Install]
+WantedBy=multi-user.target
