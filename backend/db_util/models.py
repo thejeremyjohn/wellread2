@@ -289,6 +289,7 @@ class BookImage(DBModel, CloudfrontMixin):
         return {
             'uuid': self.uuid,
             'url': self.get_url(params={'width': 512}),
+            'url_thumb': self.get_url(params={'width': 128}),
         }
     attrs = property(attrs_)
 
