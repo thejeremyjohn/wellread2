@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
+import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/review.dart';
 
@@ -33,10 +34,7 @@ class BookPageState extends ChangeNotifier {
 
   List<Bookshelf> bookshelves = [];
   Iterable<Bookshelf> get shelves => bookshelves.take(3);
-  Iterable<Bookshelf> get tags {
-    return bookshelves.where((t) => !shelves.contains(t)).toSet();
-  }
-
+  Iterable<Bookshelf> get tags => bookshelves.skip(3).toSet();
   Future<List<Bookshelf>> bookshelvesGet(String userId, {int page = 1}) async {
     Uri endpoint = flaskUri(
       '/bookshelves',
@@ -53,19 +51,24 @@ class BookPageState extends ChangeNotifier {
     List<Bookshelf> fetched = (r.data['bookshelves'] as List)
         .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
         .toList();
-    bookshelves.addAll(fetched);
 
     if (fetched.isNotEmpty) {
+      extendBookshelves(fetched);
+
       page = (r.data['page'] as int) + 1;
-
-      bookshelvesGet(userId, page: page).then((nextFetched) {
-        bookshelves.addAll(fetched);
-        notifyListeners();
-      });
+      bookshelvesGet(userId, page: page);
     }
-
-    notifyListeners();
     return bookshelves;
+  }
+
+  void extendBookshelves(List<Bookshelf> fetched) {
+    bookshelves.addAll(fetched);
+    notifyListeners();
+  }
+
+  void appendBookshelf(Bookshelf tag) {
+    bookshelves.add(tag);
+    notifyListeners();
   }
 
   List<Review> reviews = [];
@@ -120,19 +123,18 @@ class BookPageState extends ChangeNotifier {
     return review;
   }
 
-  Future<Bookshelf> tagCreate(String name) async {
+  Future<FlaskResponse> tagCreate(String name) async {
     Uri endpoint = flaskUri('/bookshelf');
 
     final r = await flaskPost(endpoint, body: {'name': name});
-    if (!r.isOk) throw Exception(r.error);
+    if (!r.isOk) return r;
 
     Bookshelf tag = Bookshelf.fromJson(
       r.data['bookshelf'] as Map<String, dynamic>,
     );
-    bookshelves.add(tag);
+    appendBookshelf(tag);
 
-    notifyListeners();
-    return tag;
+    return r;
   }
 
   Future<Bookshelf> shelfChangeMembership(

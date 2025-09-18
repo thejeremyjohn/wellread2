@@ -136,6 +136,20 @@ class _BookPageState extends State<BookPage> {
                           onPressed: bps.book.myShelf == null
                               ? null
                               : () {
+                                  void onSubmitAddTag() {
+                                    if (_addTagsController.text.isNotEmpty) {
+                                      bps
+                                          .tagCreate(_addTagsController.text)
+                                          .then((r) {
+                                            if (r.isOk) {
+                                              _addTagsController.clear();
+                                            } else if (context.mounted) {
+                                              r.showSnackBar(context);
+                                            }
+                                          });
+                                    }
+                                  }
+
                                   showDialog(
                                     context: context,
                                     builder: (context) => Consumer<BookPageState>(
@@ -164,23 +178,14 @@ class _BookPageState extends State<BookPage> {
                                                             ),
                                                       ),
                                                     ),
+                                                    onSubmitted: (_) =>
+                                                        onSubmitAddTag(),
                                                   ),
                                                 ),
                                                 SizedBox(
                                                   height: kTextTabBarHeight,
                                                   child: ElevatedButton(
-                                                    onPressed: () {
-                                                      if (_addTagsController
-                                                          .text
-                                                          .isNotEmpty) {
-                                                        bps.tagCreate(
-                                                          _addTagsController
-                                                              .text,
-                                                        );
-                                                        _addTagsController
-                                                            .clear();
-                                                      }
-                                                    },
+                                                    onPressed: onSubmitAddTag,
                                                     child: const Text(
                                                       'Add',
                                                       style: TextStyle(
