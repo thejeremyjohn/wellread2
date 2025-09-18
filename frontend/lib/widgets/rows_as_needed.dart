@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:wellread2frontend/constants.dart';
 
 List<Widget> rowsAsNeeded(
-  List<dynamic> items,
+  Iterable<dynamic> items,
   Widget Function(dynamic) builder, {
 
   int perRow = 3,
@@ -17,6 +17,7 @@ List<Widget> rowsAsNeeded(
       mainAxisSize: mainAxisSize,
       crossAxisAlignment: crossAxisAlignment,
       children: items
+          .toList()
           .sublist(idx, min(idx + perRow, items.length))
           .map<Widget>(builder)
           .toList(),

@@ -54,5 +54,10 @@ class Book {
   Image get cover => images.isEmpty
       ? Image.asset('images/no-cover.png')
       : Image.network(images.first.url);
+
   String? get avgRatingString => avgRating?.toStringAsFixed(2);
+
+  Bookshelf? get myShelf => myShelves!.isNotEmpty ? myShelves!.first : null;
+  List<Bookshelf> get myTags =>
+      myShelves!.isNotEmpty ? myShelves!.sublist(1) : [];
 }

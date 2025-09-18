@@ -3,10 +3,10 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
-import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/review.dart';
+import 'package:wellread2frontend/providers/book_page_state.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
@@ -23,21 +23,18 @@ class BookPage extends StatefulWidget {
 }
 
 class _BookPageState extends State<BookPage> {
-  late int _myUserId;
   late Future<Book> _futureBook;
   late Future<List<Review>> _futureReviews;
   late Future<List<Bookshelf>> _futureBookshelves;
-  late String? _shelvedAt;
-  double _myRating = 0;
   final _addTagsController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _myUserId = context.read<UserState>().user.id;
-    _futureBook = fetchBook();
-    _futureReviews = fetchReviews();
-    _futureBookshelves = fetchBookshelves();
+    String userId = context.read<UserState>().user.id.toString();
+    _futureBook = context.read<BookPageState>().bookGet(widget.bookId);
+    _futureBookshelves = context.read<BookPageState>().bookshelvesGet(userId);
+    _futureReviews = context.read<BookPageState>().reviewsGet(widget.bookId);
   }
 
   @override
@@ -46,298 +43,85 @@ class _BookPageState extends State<BookPage> {
     super.dispose();
   }
 
-  Future<Book> fetchBook() async {
-    Uri endpoint = flaskUri(
-      '/books',
-      queryParameters: {'id': widget.bookId},
-      addProps: [
-        'avg_rating',
-        'my_rating',
-        'my_shelves',
-        'n_reviews',
-        'n_ratings',
-      ],
-    );
-
-    final r = await flaskGet(endpoint);
-    if (r.isOk) {
-      Book book = (r.data['books'] as List)
-          .map((book) => Book.fromJson(book as Map<String, dynamic>))
-          .first;
-      setState(() {
-        _shelvedAt = book.myShelves!.isNotEmpty
-            ? book.myShelves!.first.name
-            : null;
-        _myRating = book.myRating!;
-      });
-      return book;
-    } else {
-      throw Exception(r.error);
-    }
-  }
-
-  Future<List<Review>> fetchReviews() async {
-    Uri endpoint = flaskUri(
-      '/reviews',
-      queryParameters: {'book_id': widget.bookId},
-      addProps: ['shelves', 'user_'],
-    );
-    final r = await flaskGet(endpoint);
-    if (r.isOk) {
-      return (r.data['reviews'] as List)
-          .map((review) => Review.fromJson(review as Map<String, dynamic>))
-          .toList();
-    } else {
-      throw Exception(r.error);
-    }
-  }
-
-  Future<List<Bookshelf>> fetchBookshelves({int page = 1}) async {
-    Uri endpoint = flaskUri(
-      '/bookshelves',
-      queryParameters: {
-        'user_id': _myUserId.toString(),
-        'order_by': 'can_delete',
-        'page': page.toString(),
-      },
-    );
-    final r = await flaskGet(endpoint);
-    if (r.isOk) {
-      List<Bookshelf> fetched = (r.data['bookshelves'] as List)
-          .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
-          .toList();
-
-      if (fetched.isNotEmpty) {
-        _futureBookshelves.then((fetchedSoFar) {
-          page = (r.data['page'] as int) + 1;
-          fetchBookshelves(page: page).then((subsequentFetch) {
-            fetchedSoFar.addAll(subsequentFetch);
-            setState(() {});
-          });
-        });
-      }
-
-      return fetched;
-    } else {
-      throw Exception(r.error);
-    }
-  }
-
-  Future<Review> reviewCreateOrUpdate({
-    required int rating,
-    String? content,
-  }) async {
-    Uri endpoint = flaskUri('/review');
-    Map<String, dynamic> body = {
-      'book_id': widget.bookId.toString(),
-      'rating': rating.toString(),
-    };
-    if (content != null) body['content'] = content;
-    var flaskMethod = _myRating == 0 ? flaskPost : flaskPut;
-    final r = await flaskMethod(endpoint, body: body);
-    if (r.isOk) {
-      Review review = Review.fromJson(r.data['review'] as Map<String, dynamic>);
-
-      setState(() {
-        // fetch book for updated ratings
-        _futureBook = fetchBook();
-
-        if (_shelvedAt == null) {
-          _futureBookshelves.then((bookshelves) {
-            addToShelf(bookshelves.firstWhere((s) => s.name == 'read').id);
-          });
-        }
-      });
-
-      return review;
-    } else {
-      throw Exception(r.error);
-    }
-  }
-
-  Future<Bookshelf> bookshelfAddOrRemoveBook(
-    int bookshelfId,
-    String method, {
-    bool deleteTags = false,
-  }) async {
-    var flaskMethod = method == 'POST' ? flaskPost : flaskDelete;
-    Uri endpoint = flaskUri(
-      '/bookshelf/$bookshelfId/book/${widget.bookId}',
-      queryParameters: {'delete_tags': deleteTags.toString()},
-    );
-    final r = await flaskMethod(endpoint);
-    if (r.isOk) {
-      return Bookshelf.fromJson(r.data['bookshelf'] as Map<String, dynamic>);
-    } else {
-      throw Exception(r.error);
-    }
-  }
-
-  Future<String?> addToShelf(int bookshelfId) async {
-    var shelf = await bookshelfAddOrRemoveBook(bookshelfId, 'POST');
-    setState(() => _shelvedAt = shelf.name);
-    return _shelvedAt;
-  }
-
-  Future<String?> removeFromShelf(
-    int bookshelfId, {
-    bool hide = false,
-    bool deleteTags = false,
-  }) async {
-    await bookshelfAddOrRemoveBook(
-      bookshelfId,
-      'DELETE',
-      deleteTags: deleteTags,
-    );
-    if (!hide) setState(() => _shelvedAt = null);
-    return _shelvedAt;
-  }
-
-  Future<Bookshelf> tagCreate(BuildContext context, String name) async {
-    Uri endpoint = flaskUri('/bookshelf');
-    final r = await flaskPost(endpoint, body: {'name': name});
-    if (r.isOk) {
-      Bookshelf tag = Bookshelf.fromJson(
-        r.data['bookshelf'] as Map<String, dynamic>,
-      );
-      _futureBookshelves.then((bookshelves) => bookshelves.add(tag));
-      setState(() {});
-      return tag;
-    } else {
-      if (context.mounted) r.showSnackBar(context);
-      throw Exception(r.error);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    Widget shelfButtonDialogs(Book book) => AsyncWidget(
-      future: _futureBookshelves,
-      builder: (context, awaitedData) {
-        Iterable<Bookshelf> shelves = awaitedData.take(3);
-        List<Bookshelf> tags = awaitedData.skip(3).toList();
-
-        Future<void> sweepingRemoveFromShelf({
-          bool hide = false,
-          bool deleteTags = false,
-        }) async {
-          for (var shelf in shelves) {
-            if (_shelvedAt == shelf.name) {
-              await removeFromShelf(
-                shelf.id,
-                hide: hide,
-                deleteTags: deleteTags,
-              );
-            }
-          }
-        }
-
-        void changeEssentialShelf(
-          Bookshelf shelf,
-          StateSetter stateSetter, {
-          bool deleteTags = false,
-        }) {
-          if (_shelvedAt != shelf.name) {
-            sweepingRemoveFromShelf(
-              hide: true,
-              deleteTags: deleteTags,
-            ).then((_) => addToShelf(shelf.id)).then((_) => stateSetter(() {}));
-          }
-        }
-
-        void removeFromEssentialShelf(Book book) {
-          sweepingRemoveFromShelf(hide: false, deleteTags: true).then((_) {
-            book.myShelves!.clear();
-            if (context.mounted) context.pop();
-            // fetch book for updated ratings
-            setState(() => _futureBook = fetchBook());
-          });
-        }
-
-        void addTag(StateSetter stateSetter) async {
-          tags.add(await tagCreate(context, _addTagsController.text));
-          stateSetter(() {});
-        }
-
-        void toggleTag(Bookshelf tag, bool isTagged, StateSetter stateSetter) {
-          bookshelfAddOrRemoveBook(tag.id, isTagged ? 'DELETE' : 'POST').then((
-            shelf,
-          ) {
-            isTagged
-                ? book.myShelves!.remove(shelf)
-                : book.myShelves!.add(shelf);
-            stateSetter(() {});
-          });
-        }
-
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(kGreen),
-            ),
-            onPressed: () => showDialog<String>(
-              context: context,
-              builder: (BuildContext context) {
-                return StatefulBuilder(
-                  builder: (context, dSetState) => ColumnDialog(
+    Widget shelfButtonDialogs = AsyncWidget(
+      future: _futureBook,
+      builder: (context, _) => SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ButtonStyle(backgroundColor: WidgetStateProperty.all(kGreen)),
+          onPressed: () => showDialog<String>(
+            context: context,
+            builder: (BuildContext context) => AsyncWidget(
+              future: _futureBookshelves,
+              builder: (context, _) => Consumer<BookPageState>(
+                builder: (context, bps, _) {
+                  return ColumnDialog(
                     children: <Widget>[
                       Text('Choose a shelf for this book'),
-                      ...shelves.map((shelf) {
-                        return SizedBox(
+                      ...bps.shelves.map(
+                        (shelf) => SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () =>
-                                changeEssentialShelf(shelf, dSetState),
+                                bps.shelfChangeMembership(widget.bookId, shelf),
                             label: Text(shelf.name),
-                            icon: _shelvedAt == shelf.name
+                            icon: bps.book.myShelf == shelf
                                 ? Icon(Icons.check)
                                 : null,
                           ),
-                        );
-                      }),
+                        ),
+                      ),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: _shelvedAt == null
+                          onPressed: bps.book.myShelf == null
                               ? null
                               : () => showDialog(
                                   context: context,
-                                  builder: (BuildContext context) {
-                                    return ColumnDialog(
-                                      children: <Widget>[
-                                        Text(
-                                          'Are you sure you want to remove this book from your shelves?',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge!
-                                              .copyWith(
-                                                fontFamily: 'LibreBaskerville',
+                                  builder: (BuildContext context) =>
+                                      Consumer<BookPageState>(
+                                        builder: (context, bps, _) {
+                                          return ColumnDialog(
+                                            children: <Widget>[
+                                              Text(
+                                                'Are you sure you want to remove this book from your shelves?',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleLarge!
+                                                    .copyWith(
+                                                      fontFamily:
+                                                          'LibreBaskerville',
+                                                    ),
                                               ),
-                                        ),
-                                        const Text(
-                                          'Removing this book will clear associated ratings, reviews, and tags.',
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceAround,
-                                          children: <Widget>[
-                                            ElevatedButton(
-                                              onPressed: () => context.pop(),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                removeFromEssentialShelf(book);
-                                                context.pop();
-                                              },
-                                              child: const Text('Remove'),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                              const Text(
+                                                'Removing this book will clear associated ratings, reviews, and tags.',
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceAround,
+                                                children: <Widget>[
+                                                  ElevatedButton(
+                                                    onPressed: () =>
+                                                        context.pop(),
+                                                    child: const Text('Cancel'),
+                                                  ),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      bps.unshelf();
+                                                      context.pop();
+                                                      context.pop();
+                                                    },
+                                                    child: const Text('Remove'),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
                                 ),
                           style: ElevatedButton.styleFrom(
                             iconColor: Colors.red,
@@ -349,107 +133,128 @@ class _BookPageState extends State<BookPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _shelvedAt == null
+                          onPressed: bps.book.myShelf == null
                               ? null
                               : () {
                                   showDialog(
                                     context: context,
-                                    builder: (context) => StatefulBuilder(
-                                      builder: (context, dSetState) => ColumnDialog(
-                                        children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            spacing: kPadding,
-                                            children: <Widget>[
-                                              SizedBox(
-                                                width: 200,
-                                                height: kTextTabBarHeight,
-                                                child: TextField(
-                                                  controller:
-                                                      _addTagsController,
-                                                  decoration: InputDecoration(
-                                                    labelText: 'Add tags',
-                                                    border: OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            kTextTabBarHeight *
-                                                                0.5,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height: kTextTabBarHeight,
-                                                child: ElevatedButton(
-                                                  onPressed: () =>
-                                                      addTag(dSetState),
-                                                  child: const Text(
-                                                    'Add',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          ConstrainedBox(
-                                            constraints: BoxConstraints(
-                                              minHeight: 300,
-                                              maxHeight: 600,
-                                            ),
-                                            child: ListView(
-                                              shrinkWrap: true,
-                                              children: rowsAsNeeded(tags, (
-                                                tag,
-                                              ) {
-                                                bool isTagged = book.myShelves!
-                                                    .contains(tag);
-                                                // toggleTag button for each tag
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        top: kPadding,
+                                    builder: (context) => Consumer<BookPageState>(
+                                      builder: (context, bps, _) {
+                                        return ColumnDialog(
+                                          children: [
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              spacing: kPadding,
+                                              children: <Widget>[
+                                                SizedBox(
+                                                  width: 200,
+                                                  height: kTextTabBarHeight,
+                                                  child: TextField(
+                                                    controller:
+                                                        _addTagsController,
+                                                    decoration: InputDecoration(
+                                                      labelText: 'Add tags',
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              kTextTabBarHeight *
+                                                                  0.5,
+                                                            ),
                                                       ),
-                                                  child: ConstrainedBox(
-                                                    constraints: BoxConstraints(
-                                                      maxWidth: 100,
                                                     ),
-                                                    child: ElevatedButton(
-                                                      onPressed: () =>
-                                                          toggleTag(
-                                                            tag,
-                                                            isTagged,
-                                                            dSetState,
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  height: kTextTabBarHeight,
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      if (_addTagsController
+                                                          .text
+                                                          .isNotEmpty) {
+                                                        bps.tagCreate(
+                                                          _addTagsController
+                                                              .text,
+                                                        );
+                                                        _addTagsController
+                                                            .clear();
+                                                      }
+                                                    },
+                                                    child: const Text(
+                                                      'Add',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            ConstrainedBox(
+                                              constraints: BoxConstraints(
+                                                minHeight: 300,
+                                                maxHeight: 600,
+                                              ),
+                                              child: ListView(
+                                                shrinkWrap: true,
+                                                children: rowsAsNeeded(
+                                                  bps.tags,
+                                                  spacing: kPadding * 0.8,
+                                                  (tag) {
+                                                    bool isTagged = bps
+                                                        .book
+                                                        .myTags
+                                                        .contains(tag);
+                                                    return Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            top: kPadding * 0.8,
                                                           ),
-                                                      style: isTagged
-                                                          ? ElevatedButton.styleFrom(
-                                                              backgroundColor:
-                                                                  kGreen,
-                                                            )
-                                                          : null,
-                                                      child: Tooltip(
-                                                        message:
-                                                            'toggle ${tag.name}',
-                                                        child: Text(
-                                                          tag.name,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          maxLines: 1,
+                                                      child: ConstrainedBox(
+                                                        constraints:
+                                                            BoxConstraints(
+                                                              maxWidth: 130,
+                                                            ),
+                                                        child: ElevatedButton(
+                                                          onPressed: () =>
+                                                              bps.toggleTag(
+                                                                tag,
+                                                                isTagged,
+                                                              ),
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                isTagged
+                                                                ? kGreen
+                                                                : null,
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                  kPadding *
+                                                                      0.8,
+                                                                ),
+                                                          ),
+                                                          child: Tooltip(
+                                                            message:
+                                                                'toggle ${tag.name}',
+                                                            child: Text(
+                                                              tag.name,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  ),
-                                                );
-                                              }),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                          ],
+                                        );
+                                      },
                                     ),
                                   );
                                 },
@@ -457,61 +262,65 @@ class _BookPageState extends State<BookPage> {
                         ),
                       ),
                     ],
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-            child: Text(_shelvedAt ?? 'unshelved'),
           ),
-        );
-      },
+          // child: Text(bps.book.myShelf?.name ?? 'unshelved'),
+          child: Text(
+            context.select((BookPageState b) => b.book.myShelf?.name) ??
+                'unshelved',
+          ),
+        ),
+      ),
     );
 
     Widget coverAndShelf = AsyncWidget(
       future: _futureBook,
-      builder: (context, awaitedData) {
-        Book book = awaitedData;
-
-        return Column(
+      builder: (context, _) => Consumer<BookPageState>(
+        builder: (context, bps, _) => Column(
           children: [
-            book.cover,
+            bps.book.cover,
             SizedBox(height: kPadding),
-            shelfButtonDialogs(book),
+            shelfButtonDialogs,
             SizedBox(height: kPadding),
             RatingBar.builder(
-              initialRating: _myRating,
+              initialRating: bps.book.myRating!,
               minRating: 1,
               itemSize: Theme.of(context).textTheme.headlineLarge!.fontSize!,
               itemBuilder: (context, idx) =>
                   Icon(Icons.star, color: Colors.amber),
               onRatingUpdate: (rating) {
-                if (rating != _myRating) {
-                  reviewCreateOrUpdate(rating: rating.toInt());
+                if (rating != bps.book.myRating) {
+                  bps.reviewCreateOrUpdate(
+                    widget.bookId,
+                    rating: rating.toInt(),
+                  );
                 }
               },
             ),
             Text('Rate this book'),
           ],
-        );
-      },
+        ),
+      ),
     );
 
     Widget bookDetails = AsyncWidget(
       future: _futureBook,
-      builder: (context, awaitedData) {
-        Book book = awaitedData;
-        return Column(
+      builder: (context, _) => Consumer<BookPageState>(
+        builder: (context, bps, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              book.title,
+              bps.book.title,
               style: Theme.of(context).textTheme.headlineMedium!.copyWith(
                 fontFamily: 'LibreBaskerville',
                 fontWeight: FontWeight.w600,
               ),
             ),
             Text(
-              book.author,
+              bps.book.author,
               style: TextStyle(
                 fontFamily: 'LibreBaskerville',
                 fontWeight: FontWeight.w400, // normal
@@ -521,7 +330,7 @@ class _BookPageState extends State<BookPage> {
             Row(
               children: [
                 RatingBar.builder(
-                  initialRating: book.avgRating!,
+                  initialRating: bps.book.avgRating!,
                   itemSize: Theme.of(
                     context,
                   ).textTheme.headlineLarge!.fontSize!,
@@ -532,7 +341,7 @@ class _BookPageState extends State<BookPage> {
                 ),
                 SizedBox(width: kPadding),
                 Text(
-                  book.avgRatingString!,
+                  bps.book.avgRatingString!,
                   style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                     fontFamily: 'LibreBaskerville',
                     fontWeight: FontWeight.w600,
@@ -540,7 +349,7 @@ class _BookPageState extends State<BookPage> {
                 ),
                 SizedBox(width: kPadding),
                 Text(
-                  '${book.nReviews!} reviews · ${book.nRatings!} ratings',
+                  '${bps.book.nReviews!} reviews · ${bps.book.nRatings!} ratings',
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall!.copyWith(color: Colors.grey),
@@ -548,18 +357,17 @@ class _BookPageState extends State<BookPage> {
               ],
             ),
             SizedBox(height: kPadding),
-            Text(book.description ?? ''),
+            Text(bps.book.description ?? ''),
             SizedBox(height: kPadding),
           ],
-        );
-      },
+        ),
+      ),
     );
 
     Widget communityReviews = AsyncWidget(
       future: _futureReviews,
-      builder: (context, awaitedData) {
-        List<Review> reviews = awaitedData;
-        return Column(
+      builder: (context, _) => Consumer<BookPageState>(
+        builder: (context, bps, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: kPadding,
           children: [
@@ -570,10 +378,10 @@ class _BookPageState extends State<BookPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            for (Review review in reviews) ReviewWidget(review: review),
+            for (Review review in bps.reviews) ReviewWidget(review: review),
           ],
-        );
-      },
+        ),
+      ),
     );
 
     return Scaffold(

@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/forgot_pw_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
+import 'package:wellread2frontend/providers/book_page_state.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
@@ -19,7 +20,10 @@ void main() {
       true; // ctx.push(...) updates path (same as ctx.go(...))
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (context) => UserState())],
+      providers: [
+        ChangeNotifierProvider(create: (context) => UserState()),
+        ChangeNotifierProvider(create: (context) => BookPageState()),
+      ],
       child: const MyApp(),
     ),
   );
