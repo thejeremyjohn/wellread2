@@ -27,9 +27,9 @@ class _BooksPageState extends State<BooksPage> {
   late int _page;
   late String _orderBy;
   late bool _reverse;
-  late int _totalCount;
+  bool _isGettingMore = false;
+  bool _isAllGot = false;
 
-  bool _isScrollable = false;
   final ScrollController _controller = ScrollController();
   final List<Book> _books = [];
 
@@ -43,20 +43,26 @@ class _BooksPageState extends State<BooksPage> {
     _reverse = bool.tryParse(widget.reverse ?? 'false')!;
 
     _controller.addListener(_scrollListener);
-    fetchBooks();
+    booksGet();
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_scrollListener);
     _controller.dispose();
     super.dispose();
   }
 
-  _scrollListener() {
-    if (_controller.offset >= _controller.position.maxScrollExtent &&
-        !_controller.position.outOfRange &&
-        _books.length < _totalCount) {
-      fetchBooks();
+  _scrollListener() async {
+    final double maxScroll = _controller.position.maxScrollExtent;
+    final double currentScroll = _controller.position.pixels;
+    final double buffer = dataRowHeight * 5;
+    final bool isOpportune = maxScroll - currentScroll <= buffer;
+
+    if (!_isAllGot && !_isGettingMore && isOpportune) {
+      setState(() => _isGettingMore = true);
+      await booksGet();
+      setState(() => _isGettingMore = false);
     }
   }
 
@@ -77,7 +83,7 @@ class _BooksPageState extends State<BooksPage> {
   ];
   List<double?> widthModifiers = [
     0.1, // 'cover',
-    null, // 'title',
+    0.2, // 'title',
     0.15, // 'author',
     0.15, // 'avgRating',
     0.15, // 'myRating',
@@ -137,7 +143,7 @@ class _BooksPageState extends State<BooksPage> {
     }
   }
 
-  Future<List<Book>> fetchBooks() async {
+  Future<List<Book>> booksGet() async {
     Uri endpoint = flaskUri(
       '/books',
       queryParameters: {
@@ -150,40 +156,22 @@ class _BooksPageState extends State<BooksPage> {
     );
     final r = await flaskGet(endpoint);
     if (r.isOk) {
-      List<Book> books = (r.data['books'] as List)
+      List<Book> fetched = (r.data['books'] as List)
           .map((book) => Book.fromJson(book as Map<String, dynamic>))
           .toList();
 
-      _books.addAll(books);
-      _totalCount = r.data['total_count'] as int;
-      _page = r.data['page'] as int;
+      if (fetched.isEmpty) {
+        _isAllGot = true;
+      } else {
+        _books.addAll(fetched);
+        _page = r.data['page'] as int;
+      }
       setState(() {});
 
-      return books;
+      return fetched;
     } else {
       throw Exception(r.error);
     }
-  }
-
-  @override
-  void didUpdateWidget(covariant BooksPage oldWidget) {
-    fetchBooksUntilScrollable();
-    super.didUpdateWidget(oldWidget);
-  }
-
-  void fetchBooksUntilScrollable() {
-    /// attempting to load rows beyond the viewport
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isScrollable &&
-          // _books.isNotEmpty &&
-          _controller.hasClients &&
-          _controller.position.hasContentDimensions &&
-          _controller.position.maxScrollExtent == 0) {
-        fetchBooks(); // calls setState
-      } else {
-        setState(() => _isScrollable = true);
-      }
-    });
   }
 
   @override
@@ -242,86 +230,82 @@ class _BooksPageState extends State<BooksPage> {
                       },
                     ),
                   ),
-                  Expanded(
-                    child: DataTable(
-                      horizontalMargin: 0,
-                      columnSpacing: kPadding,
-                      dataRowMinHeight: dataRowHeight,
-                      dataRowMaxHeight: dataRowHeight,
-                      sortColumnIndex: columnLabels.indexOf(_orderBy),
-                      sortAscending: !_reverse,
-                      showCheckboxColumn: false,
-                      columns: List.generate(columnLabels.length, (index) {
-                        String columnLabel = columnLabels[index];
-                        bool canSort = order_byLookup[index] != null;
+                  DataTable(
+                    horizontalMargin: 0,
+                    columnSpacing: kPadding,
+                    dataRowMinHeight: dataRowHeight,
+                    dataRowMaxHeight: dataRowHeight,
+                    sortColumnIndex: columnLabels.indexOf(_orderBy),
+                    sortAscending: !_reverse,
+                    showCheckboxColumn: false,
+                    columns: List.generate(columnLabels.length, (index) {
+                      String columnLabel = columnLabels[index];
+                      bool canSort = order_byLookup[index] != null;
 
-                        return DataColumn(
-                          columnWidth: widthModifiers[index] == null
-                              ? null
-                              : FixedColumnWidth(
-                                  constraints.maxWidth * widthModifiers[index]!,
-                                ),
-                          label: Text(
-                            columnLabel,
-                            style: TextStyle(
-                              color: canSort ? kGreen : null,
-                              fontWeight: FontWeight.bold,
+                      return DataColumn(
+                        columnWidth: widthModifiers[index] == null
+                            ? null
+                            : FixedColumnWidth(
+                                constraints.maxWidth * widthModifiers[index]!,
+                              ),
+                        label: Text(
+                          columnLabel,
+                          style: TextStyle(
+                            color: canSort ? kGreen : null,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onSort: canSort
+                            ? (_, __) {
+                                // if column is already sorted, reverse sorting, else sort asc
+                                _reverse = columnLabel == _orderBy
+                                    ? !_reverse
+                                    : false;
+                                // refresh page with new arguments and without nav history
+                                Router.neglect(
+                                  context,
+                                  () => context.go(
+                                    '/books?orderBy=$columnLabel&reverse=$_reverse',
+                                  ),
+                                );
+                              }
+                            : null,
+                      );
+                    }),
+                    rows: _books.map((Book book) {
+                      return DataRow(
+                        onSelectChanged: (value) =>
+                            context.go('/book/${book.id}'),
+                        cells: [
+                          DataCell(
+                            Container(
+                              margin: EdgeInsets.symmetric(vertical: kPadding),
+                              child: book.coverThumb,
                             ),
                           ),
-                          onSort: canSort
-                              ? (_, __) {
-                                  // if column is already sorted, reverse sorting, else sort asc
-                                  _reverse = columnLabel == _orderBy
-                                      ? !_reverse
-                                      : false;
-                                  // refresh page with new arguments and without nav history
-                                  Router.neglect(
-                                    context,
-                                    () => context.go(
-                                      '/books?orderBy=$columnLabel&reverse=$_reverse',
-                                    ),
-                                  );
-                                }
-                              : null,
-                        );
-                      }),
-                      rows: _books.map((Book book) {
-                        return DataRow(
-                          onSelectChanged: (value) =>
-                              context.go('/book/${book.id}'),
-                          cells: [
-                            DataCell(
-                              Container(
-                                margin: EdgeInsets.symmetric(
-                                  vertical: kPadding,
-                                ),
-                                child: book.cover,
-                              ),
+                          DataCell(Text(book.title)),
+                          DataCell(
+                            Text(book.author),
+                            onTap: () => print('`${book.author}` clicked'),
+                          ),
+                          DataCell(Text(book.avgRatingString!)),
+                          DataCell(
+                            RatingBar.builder(
+                              initialRating: book.myRating!,
+                              minRating: 1,
+                              itemSize: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium!.fontSize!,
+                              itemBuilder: (context, idx) =>
+                                  Icon(Icons.star, color: Colors.amber),
+                              onRatingUpdate: (rating) {
+                                // TODO review_update
+                              },
                             ),
-                            DataCell(Text(book.title)),
-                            DataCell(
-                              Text(book.author),
-                              onTap: () => print('`${book.author}` clicked'),
-                            ),
-                            DataCell(Text(book.avgRatingString!)),
-                            DataCell(
-                              RatingBar.builder(
-                                initialRating: book.myRating!,
-                                minRating: 1,
-                                itemSize: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium!.fontSize!,
-                                itemBuilder: (context, idx) =>
-                                    Icon(Icons.star, color: Colors.amber),
-                                onRatingUpdate: (rating) {
-                                  // TODO review_update
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 ],
               ),
