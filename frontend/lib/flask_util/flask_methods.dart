@@ -8,7 +8,7 @@ import 'package:wellread2frontend/flask_util/flask_response.dart';
 
 Uri flaskUri(
   String? path, {
-  Map<String, dynamic> queryParameters = const {},
+  Map<String, String> queryParameters = const {},
   List<String> addProps = const [],
   List<String> expand = const [],
 }) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
@@ -12,8 +13,7 @@ import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/text_underline_on_hover.dart';
 
 class BooksPage extends StatefulWidget {
-  const BooksPage({super.key, this.page, this.orderBy, this.reverse});
-  final String? page; // TODO? remove page as it is not passed to goRoute path
+  const BooksPage({super.key, this.orderBy, this.reverse});
   final String? orderBy;
   final String? reverse;
 
@@ -24,42 +24,26 @@ class BooksPage extends StatefulWidget {
 class _BooksPageState extends State<BooksPage> {
   late int _myUserId;
   late Future<List<Bookshelf>> _futureBookshelves;
-  late int _page;
+  int _page = 1;
+  final int _perPage = 20;
   late String _orderBy;
   late bool _reverse;
+  final List<Book> _books = [];
   bool _isGettingMore = false;
   bool _isAllGot = false;
-
-  final ScrollController _controller = ScrollController();
-  final List<Book> _books = [];
 
   @override
   void initState() {
     super.initState();
     _myUserId = context.read<UserState>().user.id;
     _futureBookshelves = fetchBookshelves();
-    _page = (widget.page as int?) ?? 0;
     _orderBy = widget.orderBy ?? 'title';
     _reverse = bool.tryParse(widget.reverse ?? 'false')!;
-
-    _controller.addListener(_scrollListener);
     booksGet();
   }
 
-  @override
-  void dispose() {
-    _controller.removeListener(_scrollListener);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  _scrollListener() async {
-    final double maxScroll = _controller.position.maxScrollExtent;
-    final double currentScroll = _controller.position.pixels;
-    final double buffer = dataRowHeight * 5;
-    final bool isOpportune = maxScroll - currentScroll <= buffer;
-
-    if (!_isAllGot && !_isGettingMore && isOpportune) {
+  Future<void> booksGetMore() async {
+    if (!_isAllGot && !_isGettingMore) {
       setState(() => _isGettingMore = true);
       await booksGet();
       setState(() => _isGettingMore = false);
@@ -147,10 +131,11 @@ class _BooksPageState extends State<BooksPage> {
     Uri endpoint = flaskUri(
       '/books',
       queryParameters: {
-        'per_page': '20',
-        'page': (_page + 1).toString(),
-        'order_by': order_byLookup[columnLabels.indexOf(_orderBy)],
+        'page': _page.toString(),
+        'per_page': _perPage.toString(),
+        'order_by': order_byLookup[columnLabels.indexOf(_orderBy)]!,
         'reverse': _reverse.toString(),
+        'user_id': _myUserId.toString(),
       },
       addProps: ['avg_rating', 'my_rating', 'my_shelves'],
     );
@@ -164,7 +149,7 @@ class _BooksPageState extends State<BooksPage> {
         _isAllGot = true;
       } else {
         _books.addAll(fetched);
-        _page = r.data['page'] as int;
+        _page = (r.data['page'] as int) + 1;
       }
       setState(() {});
 
@@ -181,7 +166,6 @@ class _BooksPageState extends State<BooksPage> {
         builder: (context, constraints) {
           return ListView(
             padding: EdgeInsets.all(kPadding),
-            controller: _controller,
             children: [
               Container(
                 margin: EdgeInsets.all(kPadding),
@@ -272,7 +256,9 @@ class _BooksPageState extends State<BooksPage> {
                             : null,
                       );
                     }),
-                    rows: _books.map((Book book) {
+                    rows: List.generate(_books.length, (index) {
+                      Book book = _books[index];
+
                       return DataRow(
                         onSelectChanged: (value) =>
                             context.go('/book/${book.id}'),
@@ -283,7 +269,17 @@ class _BooksPageState extends State<BooksPage> {
                               child: book.coverThumb,
                             ),
                           ),
-                          DataCell(Text(book.title)),
+                          DataCell(
+                            index != _books.length - 5
+                                ? Text(book.title)
+                                : VisibilityDetector(
+                                    key: Key('nearBottom'),
+                                    onVisibilityChanged: (v) {
+                                      if (v.visibleFraction > 0) booksGetMore();
+                                    },
+                                    child: Text(book.title),
+                                  ),
+                          ),
                           DataCell(
                             Text(book.author),
                             onTap: () => print('`${book.author}` clicked'),
@@ -305,7 +301,7 @@ class _BooksPageState extends State<BooksPage> {
                           ),
                         ],
                       );
-                    }).toList(),
+                    }),
                   ),
                 ],
               ),
