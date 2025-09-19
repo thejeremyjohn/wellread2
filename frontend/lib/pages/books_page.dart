@@ -13,7 +13,15 @@ import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/text_underline_on_hover.dart';
 
 class BooksPage extends StatefulWidget {
-  const BooksPage({super.key, this.orderBy, this.reverse});
+  const BooksPage({
+    super.key,
+    this.userId,
+    this.bookshelfId,
+    this.orderBy,
+    this.reverse,
+  });
+  final String? userId;
+  final String? bookshelfId;
   final String? orderBy;
   final String? reverse;
 
@@ -22,7 +30,6 @@ class BooksPage extends StatefulWidget {
 }
 
 class _BooksPageState extends State<BooksPage> {
-  late int _myUserId;
   late Future<List<Bookshelf>> _futureBookshelves;
   int _page = 1;
   final int _perPage = 20;
@@ -35,7 +42,6 @@ class _BooksPageState extends State<BooksPage> {
   @override
   void initState() {
     super.initState();
-    _myUserId = context.read<UserState>().user.id;
     _futureBookshelves = fetchBookshelves();
     _orderBy = widget.orderBy ?? 'title';
     _reverse = bool.tryParse(widget.reverse ?? 'false')!;
@@ -79,9 +85,10 @@ class _BooksPageState extends State<BooksPage> {
     Uri endpoint = flaskUri(
       '/bookshelves',
       queryParameters: {
-        'user_id': _myUserId.toString(),
+        'user_id': context.read<UserState>().user.id.toString(),
         'order_by': 'can_delete',
         'page': page.toString(),
+        'per_page': '100',
       },
       addProps: ['n_books'],
     );
@@ -128,15 +135,22 @@ class _BooksPageState extends State<BooksPage> {
   }
 
   Future<List<Book>> booksGet() async {
+    Map<String, String> queryParameters = {
+      'page': _page.toString(),
+      'per_page': _perPage.toString(),
+      'order_by': order_byLookup[columnLabels.indexOf(_orderBy)]!,
+      'reverse': _reverse.toString(),
+    };
+    if (widget.userId != null) {
+      queryParameters['user_id'] = widget.userId!;
+    }
+    if (widget.bookshelfId != null) {
+      queryParameters['bookshelf_id'] = widget.bookshelfId!;
+    }
+
     Uri endpoint = flaskUri(
       '/books',
-      queryParameters: {
-        'page': _page.toString(),
-        'per_page': _perPage.toString(),
-        'order_by': order_byLookup[columnLabels.indexOf(_orderBy)]!,
-        'reverse': _reverse.toString(),
-        'user_id': _myUserId.toString(),
-      },
+      queryParameters: queryParameters,
       addProps: ['avg_rating', 'my_rating', 'my_shelves'],
     );
     final r = await flaskGet(endpoint);
@@ -170,6 +184,7 @@ class _BooksPageState extends State<BooksPage> {
               Container(
                 margin: EdgeInsets.all(kPadding),
                 child: Text(
+                  // TODO conditional So-and-so's Books
                   '${context.watch<UserState>().user.firstName}\'s Books',
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                     fontFamily: 'LibreBaskerville',
@@ -188,7 +203,10 @@ class _BooksPageState extends State<BooksPage> {
                       future: _futureBookshelves,
                       builder: (context, bookshelves) {
                         Iterable<Bookshelf> shelves = bookshelves.take(3);
-                        List<Bookshelf> tags = bookshelves.skip(3).toList();
+                        List<Bookshelf> tags = bookshelves
+                            .skip(3)
+                            .toSet()
+                            .toList();
                         tags.sort((a, b) => a.name.compareTo(b.name));
 
                         return Column(
@@ -198,13 +216,40 @@ class _BooksPageState extends State<BooksPage> {
                               'Bookshelves',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              'All (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
-                              style: TextStyle(color: Colors.grey),
+                            Clickable(
+                              onClick: () {
+                                Router.neglect(context, () {
+                                  final userId = context
+                                      .read<UserState>()
+                                      .user
+                                      .id;
+                                  context.go('/books?userId=$userId');
+                                });
+                              },
+                              child: TextUnderlineOnHover(
+                                'All (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
+                                style: widget.userId != null
+                                    ? TextStyle(color: Colors.grey)
+                                    : TextStyle(),
+                              ),
                             ),
-                            ...shelves.map((s) => ShelfRow(shelf: s)),
+                            ...shelves.map(
+                              (s) => ShelfRow(
+                                shelf: s,
+                                style: s.id.toString() == widget.bookshelfId
+                                    ? TextStyle(color: Colors.grey)
+                                    : TextStyle(),
+                              ),
+                            ),
                             Divider(height: kPadding),
-                            ...tags.map((s) => ShelfRow(shelf: s)),
+                            ...tags.map(
+                              (s) => ShelfRow(
+                                shelf: s,
+                                style: s.id.toString() == widget.bookshelfId
+                                    ? TextStyle(color: Colors.grey)
+                                    : TextStyle(),
+                              ),
+                            ),
                             SizedBox(height: kPadding * 0.5),
                             AddShelf(
                               onAdd: (tagName) => tagCreate(context, tagName),
@@ -246,12 +291,25 @@ class _BooksPageState extends State<BooksPage> {
                                     ? !_reverse
                                     : false;
                                 // refresh page with new arguments and without nav history
-                                Router.neglect(
-                                  context,
-                                  () => context.go(
-                                    '/books?orderBy=$columnLabel&reverse=$_reverse',
-                                  ),
-                                );
+                                Router.neglect(context, () {
+                                  Map<String, String> queryParameters = {
+                                    'orderBy': columnLabel,
+                                    'reverse': '$_reverse',
+                                  };
+                                  if (widget.userId != null) {
+                                    queryParameters['userId'] = widget.userId!;
+                                  }
+                                  if (widget.bookshelfId != null) {
+                                    queryParameters['bookshelfId'] =
+                                        widget.bookshelfId!;
+                                  }
+                                  context.go(
+                                    Uri(
+                                      path: '/books',
+                                      queryParameters: queryParameters,
+                                    ).toString(),
+                                  );
+                                });
                               }
                             : null,
                       );
@@ -282,7 +340,10 @@ class _BooksPageState extends State<BooksPage> {
                           ),
                           DataCell(
                             Text(book.author),
-                            onTap: () => print('`${book.author}` clicked'),
+                            onTap: () {
+                              print('`${book.author}` clicked');
+                              // TODO goto AuthorPage
+                            },
                           ),
                           DataCell(Text(book.avgRatingString!)),
                           DataCell(
@@ -314,17 +375,28 @@ class _BooksPageState extends State<BooksPage> {
 }
 
 class ShelfRow extends StatelessWidget {
-  const ShelfRow({super.key, required this.shelf});
+  const ShelfRow({
+    super.key,
+    required this.shelf,
+    this.style = const TextStyle(),
+  });
 
   final Bookshelf shelf;
+  final TextStyle style;
 
   @override
   Widget build(BuildContext context) {
     return Clickable(
       onClick: () {
-        // TODO goto ShelfPage
+        Router.neglect(
+          context,
+          () => context.go('/books?bookshelfId=${shelf.id}'),
+        );
       },
-      child: TextUnderlineOnHover('${shelf.name} (${shelf.nBooks})'),
+      child: TextUnderlineOnHover(
+        '${shelf.name} (${shelf.nBooks})',
+        style: style,
+      ),
     );
   }
 }

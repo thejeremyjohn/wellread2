@@ -87,6 +87,8 @@ class _MyAppState extends State<MyApp> {
               path: '/books',
               builder: (context, state) => BooksPage(
                 key: UniqueKey(), // forces .go([same]) to trigger initState
+                userId: state.uri.queryParameters['userId'],
+                bookshelfId: state.uri.queryParameters['bookshelfId'],
                 orderBy: state.uri.queryParameters['orderBy'],
                 reverse: state.uri.queryParameters['reverse'],
               ),

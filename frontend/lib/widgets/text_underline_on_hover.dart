@@ -27,9 +27,12 @@ class _TextUnderlineOnHoverState extends State<TextUnderlineOnHover> {
               decoration: _hover ? TextDecoration.underline : null,
               decorationColor: widget.style.color,
             ),
-            onEnter: (_) => setState(() => _hover = true),
-            onExit: (_) => setState(() => _hover = false),
-            // Add recognizer for click handling if needed
+            onEnter: (_) {
+              if (context.mounted) setState(() => _hover = true);
+            },
+            onExit: (_) {
+              if (context.mounted) setState(() => _hover = false);
+            },
           ),
         ],
       ),

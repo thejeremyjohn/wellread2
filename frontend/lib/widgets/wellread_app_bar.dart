@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
+import 'package:wellread2frontend/providers/user_state.dart';
 
 class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
   const WellreadAppBar({super.key});
@@ -26,15 +29,14 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: const Icon(Icons.book),
                 tooltip: 'My Books',
                 onPressed: () {
-                  print('You clicked My Books');
+                  final userId = context.read<UserState>().user.id;
+                  context.go('/books?userId=$userId');
                 },
               ),
               IconButton(
                 icon: const Icon(Icons.shopping_cart),
                 tooltip: 'Browse',
-                onPressed: () async {
-                  print('You clicked Browse');
-                },
+                onPressed: () => context.go('/books'),
               ),
               IconButton(
                 icon: const Icon(Icons.person),
@@ -46,10 +48,7 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
               IconButton(
                 icon: const Icon(Icons.logout),
                 tooltip: 'Logout',
-                onPressed: () {
-                  print('You clicked logout');
-                  logout();
-                },
+                onPressed: () => logout(),
               ),
             ],
           ),
@@ -65,6 +64,7 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
               labelText: 'Search books',
               suffixIcon: Icon(Icons.search),
             ),
+            // onEditingComplete: , TODO search books
           ),
         ),
       ],
