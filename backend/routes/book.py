@@ -1,6 +1,6 @@
 from flask import jsonify, request
 from flask_jwt_extended import jwt_required
-from backend.app import app, db, Book
+from backend.app import app, db, Book, BookBookshelf
 
 
 @app.route('/book', methods=['POST'])
@@ -35,6 +35,17 @@ def books_get():
     if id != None:
         books = books \
             .filter(Book.id == id)
+
+    bookshelf_id = request.args.get('bookshelf_id', type=int)
+    if bookshelf_id != None:
+        books = books \
+            .join(BookBookshelf) \
+            .filter(BookBookshelf.bookshelf_id == bookshelf_id)
+
+    user_id = request.args.get('user_id', type=int)
+    if user_id != None:
+        books = books \
+            .filter(Book.shelved_by_user(user_id))
 
     total_count = books.count()
     books = books.order_by_request_args()

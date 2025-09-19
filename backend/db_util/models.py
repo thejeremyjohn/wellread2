@@ -9,9 +9,9 @@ from backend import util_functions
 from backend.db_util.custom_base_util import DBModel
 from flask import request
 from flask_jwt_extended import create_access_token, create_refresh_token, current_user
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import join
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.orm import validates, relationship
-from sqlalchemy.sql.functions import func
 from uuid import uuid1
 from validate_email import validate_email
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -252,6 +252,24 @@ class Book(DBModel):
             .where(Review.book_id == cls.id)
             .where(Review.user_id == current_user.id)
             .label('my_rating')
+        )
+
+    @hybrid_method
+    def shelved_by_user(self, user_id):
+        return db.session.query(
+            db.exists()
+            .select_from(join(BookBookshelf, Bookshelf))
+            .where(BookBookshelf.book_id == self.id)
+            .where(Bookshelf.user_id == user_id)
+        ).scalar()
+
+    @shelved_by_user.expression
+    def shelved_by_user(cls, user_id):
+        return (
+            db.exists()
+            .select_from(join(BookBookshelf, Bookshelf))
+            .where(BookBookshelf.book_id == cls.id)
+            .where(Bookshelf.user_id == user_id)
         )
 
     _shelves = relationship(
