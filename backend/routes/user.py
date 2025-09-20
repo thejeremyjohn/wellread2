@@ -125,3 +125,27 @@ def user_update():
         'status': 'ok', 'error': None,
         'user': user.attrs,
     })
+
+
+@app.route('/users', methods=['GET'])
+@jwt_required()
+def users_get():
+    users = User.query
+
+    id = request.args.get('id', type=int)
+    if id != None:
+        users = users \
+            .filter(User.id == id)
+
+    total_count = users.count()
+    users = users.order_by_request_args()
+    page, users = users.paginate_by_request_args()
+    users = [_.attrs_(add_props=request.add_props, expand=request.expand)
+             for _ in users]
+
+    return jsonify({
+        'status': 'ok', 'error': None,
+        'users': users,
+        'total_count': total_count,
+        'page': page,
+    })
