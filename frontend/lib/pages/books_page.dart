@@ -7,6 +7,7 @@ import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/bookshelf.dart';
+import 'package:wellread2frontend/models/user.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
@@ -30,6 +31,7 @@ class BooksPage extends StatefulWidget {
 }
 
 class _BooksPageState extends State<BooksPage> {
+  late Future<User> _futureUser;
   late Future<List<Bookshelf>> _futureBookshelves;
   int _page = 1;
   final int _perPage = 20;
@@ -42,9 +44,10 @@ class _BooksPageState extends State<BooksPage> {
   @override
   void initState() {
     super.initState();
+    _futureUser = userGet();
     _futureBookshelves = fetchBookshelves();
-    _orderBy = widget.orderBy ?? 'title';
-    _reverse = bool.tryParse(widget.reverse ?? 'false')!;
+    _orderBy = widget.orderBy ?? 'avgRating';
+    _reverse = bool.tryParse(widget.reverse ?? 'true')!;
     booksGet();
   }
 
@@ -81,37 +84,51 @@ class _BooksPageState extends State<BooksPage> {
   double myShelvesWidthModifier = 0.15;
   double dataRowHeight = 128;
 
+  Future<User> userGet() async {
+    User me = context.read<UserState>().user;
+    if (widget.userId == me.id.toString()) return me;
+
+    Uri endpoint = flaskUri('/users', queryParameters: {'id': widget.userId!});
+    final r = await flaskGet(endpoint);
+    if (!r.isOk) throw Exception(r.error);
+
+    return (r.data['users'] as List)
+        .map((shelf) => User.fromJson(shelf as Map<String, dynamic>))
+        .first;
+  }
+
   Future<List<Bookshelf>> fetchBookshelves({int page = 1}) async {
     Uri endpoint = flaskUri(
       '/bookshelves',
       queryParameters: {
-        'user_id': context.read<UserState>().user.id.toString(),
+        'user_id': widget.userId != null
+            ? widget.userId!
+            : context.read<UserState>().user.id.toString(),
         'order_by': 'can_delete',
         'page': page.toString(),
         'per_page': '100',
       },
       addProps: ['n_books'],
     );
+
     final r = await flaskGet(endpoint);
-    if (r.isOk) {
-      List<Bookshelf> fetched = (r.data['bookshelves'] as List)
-          .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
-          .toList();
+    if (!r.isOk) throw Exception(r.error);
 
-      if (fetched.isNotEmpty) {
-        _futureBookshelves.then((fetchedSoFar) {
-          page = (r.data['page'] as int) + 1;
-          fetchBookshelves(page: page).then((subsequentFetch) {
-            fetchedSoFar.addAll(subsequentFetch);
-            setState(() {});
-          });
+    List<Bookshelf> fetched = (r.data['bookshelves'] as List)
+        .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
+        .toList();
+
+    if (fetched.isNotEmpty) {
+      _futureBookshelves.then((fetchedSoFar) {
+        page = (r.data['page'] as int) + 1;
+        fetchBookshelves(page: page).then((subsequentFetch) {
+          fetchedSoFar.addAll(subsequentFetch);
+          setState(() {});
         });
-      }
-
-      return fetched;
-    } else {
-      throw Exception(r.error);
+      });
     }
+
+    return fetched;
   }
 
   Future<Bookshelf> tagCreate(BuildContext context, String name) async {
@@ -153,24 +170,23 @@ class _BooksPageState extends State<BooksPage> {
       queryParameters: queryParameters,
       addProps: ['avg_rating', 'my_rating', 'my_shelves'],
     );
+
     final r = await flaskGet(endpoint);
-    if (r.isOk) {
-      List<Book> fetched = (r.data['books'] as List)
-          .map((book) => Book.fromJson(book as Map<String, dynamic>))
-          .toList();
+    if (!r.isOk) throw Exception(r.error);
 
-      if (fetched.isEmpty) {
-        _isAllGot = true;
-      } else {
-        _books.addAll(fetched);
-        _page = (r.data['page'] as int) + 1;
-      }
-      setState(() {});
+    List<Book> fetched = (r.data['books'] as List)
+        .map((book) => Book.fromJson(book as Map<String, dynamic>))
+        .toList();
 
-      return fetched;
+    if (fetched.isEmpty) {
+      _isAllGot = true;
     } else {
-      throw Exception(r.error);
+      _books.addAll(fetched);
+      _page = (r.data['page'] as int) + 1;
     }
+    setState(() {});
+
+    return fetched;
   }
 
   @override
@@ -178,19 +194,25 @@ class _BooksPageState extends State<BooksPage> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
+          final headerStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
+            fontFamily: 'LibreBaskerville',
+            fontWeight: FontWeight.w600,
+          );
+
           return ListView(
             padding: EdgeInsets.all(kPadding),
             children: [
               Container(
                 margin: EdgeInsets.all(kPadding),
-                child: Text(
-                  // TODO conditional So-and-so's Books
-                  '${context.watch<UserState>().user.firstName}\'s Books',
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    fontFamily: 'LibreBaskerville',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: widget.userId == null
+                    ? Text('All Books', style: headerStyle)
+                    : AsyncWidget(
+                        future: _futureUser,
+                        builder: (context, user) => Text(
+                          '${(user as User).firstName}\'s Books',
+                          style: headerStyle,
+                        ),
+                      ),
               ),
 
               Row(
@@ -218,42 +240,47 @@ class _BooksPageState extends State<BooksPage> {
                             ),
                             Clickable(
                               onClick: () {
-                                Router.neglect(context, () {
-                                  final userId = context
-                                      .read<UserState>()
-                                      .user
-                                      .id;
-                                  context.go('/books?userId=$userId');
-                                });
+                                Router.neglect(
+                                  context,
+                                  () => context.go(
+                                    '/books?userId=${widget.userId ?? context.read<UserState>().user.id}',
+                                  ),
+                                );
                               },
                               child: TextUnderlineOnHover(
-                                'All (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
-                                style: widget.userId != null
+                                'From All Shelves (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
+                                style:
+                                    widget.userId != null &&
+                                        widget.bookshelfId == null
                                     ? TextStyle(color: Colors.grey)
                                     : TextStyle(),
                               ),
                             ),
                             ...shelves.map(
-                              (s) => ShelfRow(
-                                shelf: s,
-                                style: s.id.toString() == widget.bookshelfId
-                                    ? TextStyle(color: Colors.grey)
-                                    : TextStyle(),
+                              (shelf) => ShelfRow(
+                                shelf: shelf,
+                                isSelected:
+                                    shelf.id.toString() == widget.bookshelfId,
+                                userId: widget.userId,
                               ),
                             ),
                             Divider(height: kPadding),
                             ...tags.map(
-                              (s) => ShelfRow(
-                                shelf: s,
-                                style: s.id.toString() == widget.bookshelfId
-                                    ? TextStyle(color: Colors.grey)
-                                    : TextStyle(),
+                              (tag) => ShelfRow(
+                                shelf: tag,
+                                isSelected:
+                                    tag.id.toString() == widget.bookshelfId,
+                                userId: widget.userId,
                               ),
                             ),
                             SizedBox(height: kPadding * 0.5),
-                            AddShelf(
-                              onAdd: (tagName) => tagCreate(context, tagName),
-                            ),
+                            widget.userId ==
+                                    context.read<UserState>().user.id.toString()
+                                ? AddShelf(
+                                    onAdd: (tagName) =>
+                                        tagCreate(context, tagName),
+                                  )
+                                : Container(),
                           ],
                         );
                       },
@@ -378,24 +405,30 @@ class ShelfRow extends StatelessWidget {
   const ShelfRow({
     super.key,
     required this.shelf,
+    this.isSelected = false,
+    this.userId,
     this.style = const TextStyle(),
   });
 
   final Bookshelf shelf;
+  final bool isSelected;
+  final String? userId;
   final TextStyle style;
 
   @override
   Widget build(BuildContext context) {
     return Clickable(
       onClick: () {
-        Router.neglect(
-          context,
-          () => context.go('/books?bookshelfId=${shelf.id}'),
-        );
+        Router.neglect(context, () {
+          Map<String, String> queryParameters = {'bookshelfId': '${shelf.id}'};
+          if (userId != null) queryParameters['userId'] = userId!;
+          Uri loc = Uri(path: '/books', queryParameters: queryParameters);
+          context.go(loc.toString());
+        });
       },
       child: TextUnderlineOnHover(
         '${shelf.name} (${shelf.nBooks})',
-        style: style,
+        style: isSelected ? TextStyle(color: Colors.grey) : TextStyle(),
       ),
     );
   }

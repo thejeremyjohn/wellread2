@@ -460,15 +460,17 @@ class ReviewWidget extends StatelessWidget {
               Row(
                 spacing: kPadding * 0.75,
                 children: [
-                  for (Bookshelf shelf in review.tags!)
+                  for (Bookshelf tag in review.tags!)
                     Clickable(
                       onClick: () {
-                        // TODO goto ShelfPage
+                        context.go(
+                          '/books?userId=${review.userId}&bookshelfId=${tag.id}',
+                        );
                       },
                       child: Underline(
                         underlineColor: kGreen,
                         text: Text(
-                          shelf.name,
+                          tag.name,
                           style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
