@@ -1,13 +1,14 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/flask_util/flask_response.dart';
 import 'package:wellread2frontend/models/book.dart';
+import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/review.dart';
 
-import '../models/bookshelf.dart';
-
 class BookPageState extends ChangeNotifier {
-  late Book book;
+  late Book _book;
+  Book get book => _book;
   Future<Book> bookGet(String bookId) async {
     Uri endpoint = flaskUri(
       '/books',
@@ -24,17 +25,20 @@ class BookPageState extends ChangeNotifier {
     final r = await flaskGet(endpoint);
     if (!r.isOk) throw Exception(r.error);
 
-    book = (r.data['books'] as List)
-        .map((book) => Book.fromJson(book as Map<String, dynamic>))
+    _book = (r.data['books'] as List)
+        .map((b) => Book.fromJson(b as Map<String, dynamic>))
         .first;
 
     notifyListeners();
-    return book;
+    return _book;
   }
 
-  List<Bookshelf> bookshelves = [];
-  Iterable<Bookshelf> get shelves => bookshelves.take(3);
-  Iterable<Bookshelf> get tags => bookshelves.skip(3).toSet();
+  final List<Bookshelf> _bookshelves = [];
+  UnmodifiableListView<Bookshelf> get bookshelves =>
+      UnmodifiableListView(_bookshelves);
+  Iterable<Bookshelf> get shelves => _bookshelves.take(3);
+  Iterable<Bookshelf> get tags => _bookshelves.skip(3).toSet();
+
   Future<List<Bookshelf>> bookshelvesGet(String userId, {int page = 1}) async {
     Uri endpoint = flaskUri(
       '/bookshelves',
@@ -58,20 +62,21 @@ class BookPageState extends ChangeNotifier {
       page = (r.data['page'] as int) + 1;
       bookshelvesGet(userId, page: page);
     }
-    return bookshelves;
+    return _bookshelves;
   }
 
   void extendBookshelves(List<Bookshelf> fetched) {
-    bookshelves.addAll(fetched);
+    _bookshelves.addAll(fetched);
     notifyListeners();
   }
 
   void appendBookshelf(Bookshelf tag) {
-    bookshelves.add(tag);
+    _bookshelves.add(tag);
     notifyListeners();
   }
 
-  List<Review> reviews = [];
+  final List<Review> _reviews = [];
+  UnmodifiableListView<Review> get reviews => UnmodifiableListView(_reviews);
   Future<List<Review>> reviewsGet(String bookId) async {
     Uri endpoint = flaskUri(
       '/reviews',
@@ -85,12 +90,12 @@ class BookPageState extends ChangeNotifier {
     List<Review> fetched = (r.data['reviews'] as List)
         .map((review) => Review.fromJson(review as Map<String, dynamic>))
         .toList();
-    reviews.addAll(fetched);
+    _reviews.addAll(fetched);
 
     // TODO paginated reviews (not the same as bookshelves I guess)
 
     notifyListeners();
-    return reviews;
+    return _reviews;
   }
 
   Future<Review> reviewCreateOrUpdate(
@@ -106,12 +111,12 @@ class BookPageState extends ChangeNotifier {
     };
     if (content != null) body['content'] = content;
 
-    var flaskMethod = book.myRating == 0 ? flaskPost : flaskPut;
+    var flaskMethod = _book.myRating == 0 ? flaskPost : flaskPut;
     final r = await flaskMethod(endpoint, body: body);
     if (!r.isOk) throw Exception(r.error);
 
     Review review = Review.fromJson(r.data['review'] as Map<String, dynamic>);
-    if (book.myRating == 0 && book.myShelf == null) {
+    if (_book.myRating == 0 && _book.myShelf == null) {
       shelfChangeMembership(
         bookId,
         shelves.firstWhere((s) => s.name == 'read'),
@@ -119,7 +124,7 @@ class BookPageState extends ChangeNotifier {
     }
 
     notifyListeners();
-    bookGet(bookId); // for updated book.avgRating
+    bookGet(bookId); // for updated _book.avgRating
     return review;
   }
 
@@ -141,26 +146,26 @@ class BookPageState extends ChangeNotifier {
     String bookId,
     Bookshelf shelf,
   ) async {
-    if (book.myShelf == shelf) return shelf;
-    if (book.myShelf != null) {
-      await book.myShelf!.removeBook(book, deleteTags: false);
+    if (_book.myShelf == shelf) return shelf;
+    if (_book.myShelf != null) {
+      await _book.myShelf!.removeBook(_book, deleteTags: false);
     }
-    Bookshelf newShelf = await shelf.addBook(book);
+    Bookshelf newShelf = await shelf.addBook(_book);
 
-    bookGet(bookId); // for updated book.myShelf
+    bookGet(bookId); // for updated _book.myShelf
     return newShelf;
   }
 
   Future unshelf() async {
-    await book.myShelf!.removeBook(book, deleteTags: true);
+    await _book.myShelf!.removeBook(_book, deleteTags: true);
 
-    bookGet(book.id.toString()); // for updated book.myShelf
+    bookGet(_book.id.toString()); // for updated _book.myShelf
     return;
   }
 
   Future toggleTag(Bookshelf tag, bool isTagged) async {
-    (isTagged ? tag.removeBook(book) : tag.addBook(book)).then((t) {
-      isTagged ? book.myShelves!.remove(t) : book.myShelves!.add(t);
+    (isTagged ? tag.removeBook(_book) : tag.addBook(_book)).then((t) {
+      isTagged ? _book.myShelves!.remove(t) : _book.myShelves!.add(t);
       notifyListeners();
       return;
     });

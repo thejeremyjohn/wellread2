@@ -44,7 +44,7 @@ class _BooksPageState extends State<BooksPage> {
   @override
   void initState() {
     super.initState();
-    _futureUser = userGet();
+    if (widget.userId != null) _futureUser = userGet();
     _futureBookshelves = fetchBookshelves();
     _orderBy = widget.orderBy ?? 'avgRating';
     _reverse = bool.tryParse(widget.reverse ?? 'true')!;
