@@ -47,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
           setState(() => _isLoginResponseOk = true);
 
           if (r.data['access_token'] != null) {
-            context.go('/books');
+            context.go(initialLocation);
           }
         }
       }

@@ -7,6 +7,7 @@ import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wellread2frontend/pages/review_page.dart';
 import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/forgot_pw_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
@@ -43,13 +44,13 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     goRouter = GoRouter(
       navigatorKey: kRootNavKey,
-      initialLocation: '/books',
+      initialLocation: initialLocation,
       routes: [
-        GoRoute(path: '/', redirect: (_, __) => '/books'),
+        GoRoute(path: '/', redirect: (_, __) => initialLocation),
         GoRoute(
           path: '/login',
           redirect: (_, __) async =>
-              await isLoggedIn(context) ? '/books' : null,
+              await isLoggedIn(context) ? initialLocation : null,
           builder: (context, state) => SelectionArea(child: const LoginPage()),
         ),
         GoRoute(
@@ -64,13 +65,13 @@ class _MyAppState extends State<MyApp> {
         GoRoute(
           path: '/signup',
           redirect: (_, __) async =>
-              await isLoggedIn(context) ? '/books' : null,
+              await isLoggedIn(context) ? initialLocation : null,
           builder: (context, state) => SelectionArea(child: const SignupPage()),
         ),
         GoRoute(
           path: '/verify',
           redirect: (_, __) async =>
-              await isLoggedIn(context) ? '/books' : null,
+              await isLoggedIn(context) ? initialLocation : null,
           builder: (context, state) => SelectionArea(
             child: VerifyPage(token: state.uri.queryParameters['token']),
           ),
@@ -95,10 +96,13 @@ class _MyAppState extends State<MyApp> {
             ),
             GoRoute(
               path: '/book/:bookId',
-              builder: (context, state) => BookPage(
-                bookId: state.pathParameters['bookId']!,
-                // userId: (state.extra as Map?)?['userId'],
-              ),
+              builder: (context, state) =>
+                  BookPage(bookId: state.pathParameters['bookId']!),
+            ),
+            GoRoute(
+              path: '/book/:bookId/review',
+              builder: (context, state) =>
+                  ReviewPage(bookId: state.pathParameters['bookId']!),
             ),
           ],
         ),
