@@ -206,58 +206,52 @@ class _BookPageState extends State<BookPage> {
                                                 minHeight: 300,
                                                 maxHeight: 600,
                                               ),
-                                              child: ListView(
-                                                shrinkWrap: true,
-                                                children: rowsAsNeeded(
-                                                  bps.tags,
+                                              child: SingleChildScrollView(
+                                                child: Wrap(
                                                   spacing: kPadding * 0.8,
-                                                  (tag) {
+                                                  runSpacing: kPadding * 0.8,
+                                                  children: bps.tags.map((tag) {
                                                     bool isTagged = bps
                                                         .book
                                                         .myTags
                                                         .contains(tag);
-                                                    return Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            top: kPadding * 0.8,
+                                                    return ConstrainedBox(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                            maxWidth: 130,
                                                           ),
-                                                      child: ConstrainedBox(
-                                                        constraints:
-                                                            BoxConstraints(
-                                                              maxWidth: 130,
+                                                      child: ElevatedButton(
+                                                        onPressed: () =>
+                                                            bps.toggleTag(
+                                                              tag,
+                                                              isTagged,
                                                             ),
-                                                        child: ElevatedButton(
-                                                          onPressed: () =>
-                                                              bps.toggleTag(
-                                                                tag,
-                                                                isTagged,
-                                                              ),
-                                                          style: ElevatedButton.styleFrom(
-                                                            backgroundColor:
-                                                                isTagged
-                                                                ? kGreen
-                                                                : null,
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                  kPadding *
-                                                                      0.8,
-                                                                ),
-                                                          ),
-                                                          child: Tooltip(
-                                                            message:
-                                                                'toggle ${tag.name}',
-                                                            child: Text(
-                                                              tag.name,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                              maxLines: 1,
+                                                        style:
+                                                            ElevatedButton.styleFrom(
+                                                              backgroundColor:
+                                                                  isTagged
+                                                                  ? kGreen
+                                                                  : null,
+                                                              padding:
+                                                                  EdgeInsets.all(
+                                                                    kPadding *
+                                                                        0.8,
+                                                                  ),
                                                             ),
+                                                        child: Tooltip(
+                                                          message:
+                                                              'toggle ${tag.name}',
+                                                          child: Text(
+                                                            tag.name,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            maxLines: 1,
                                                           ),
                                                         ),
                                                       ),
                                                     );
-                                                  },
+                                                  }).toList(),
                                                 ),
                                               ),
                                             ),
@@ -473,7 +467,7 @@ class ReviewWidget extends StatelessWidget {
                 ignoreGestures: true,
               ),
               Text(review.content ?? '', softWrap: true, maxLines: 5),
-              Row(
+              Wrap(
                 spacing: kPadding * 0.75,
                 children: [
                   for (Bookshelf tag in review.tags!)
