@@ -75,12 +75,32 @@ class BookPageState extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _reviewsPage = 1;
+  final int _reviewsPerPage = 20;
+  bool _isReviewsGettingMore = false;
+  bool _isAllReviewsGot = false;
+  Map<String, String> _reviewsQueryParameters = {};
+
+  Future<void> reviewsGetMore() async {
+    if (!_isAllReviewsGot && !_isReviewsGettingMore) {
+      await reviewsGet(_reviewsQueryParameters);
+    }
+  }
+
   final List<Review> _reviews = [];
   UnmodifiableListView<Review> get reviews => UnmodifiableListView(_reviews);
   Future<List<Review>> reviewsGet(Map<String, String> queryParameters) async {
+    _reviewsQueryParameters = queryParameters;
+    _isReviewsGettingMore = true;
+    notifyListeners();
+
     Uri endpoint = flaskUri(
       '/reviews',
-      queryParameters: queryParameters,
+      queryParameters: {
+        ..._reviewsQueryParameters,
+        'page': _reviewsPage.toString(),
+        'per_page': _reviewsPerPage.toString(),
+      },
       addProps: ['shelves', 'user_'],
     );
 
@@ -90,13 +110,20 @@ class BookPageState extends ChangeNotifier {
     List<Review> fetched = (r.data['reviews'] as List)
         .map((review) => Review.fromJson(review as Map<String, dynamic>))
         .toList();
-    if (r.data['page'] as int == 1) _reviews.clear(); // reset state if page:1
-    _reviews.addAll(fetched);
 
-    // TODO paginated reviews (not the same as bookshelves I guess)
+    if (_reviewsPage == 1) _reviews.clear();
+    if (fetched.length < _reviewsPerPage) {
+      _isAllReviewsGot = true;
+      _reviewsPage = 1;
+    } else {
+      _isAllReviewsGot = false;
+      _reviewsPage += 1;
+    }
+    _reviews.addAll(fetched);
+    _isReviewsGettingMore = false;
 
     notifyListeners();
-    return _reviews;
+    return fetched;
   }
 
   Future<Review> reviewCreateOrUpdate(

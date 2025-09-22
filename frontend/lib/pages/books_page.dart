@@ -358,7 +358,7 @@ class _BooksPageState extends State<BooksPage> {
                             index != _books.length - 5
                                 ? Text(book.title)
                                 : VisibilityDetector(
-                                    key: Key('nearBottom'),
+                                    key: Key('nearBottomBook'),
                                     onVisibilityChanged: (v) {
                                       if (v.visibleFraction > 0) booksGetMore();
                                     },

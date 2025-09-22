@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/bookshelf.dart';
@@ -11,7 +12,6 @@ import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/column_dialog.dart';
-import 'package:wellread2frontend/widgets/rows_as_needed.dart';
 import 'package:wellread2frontend/widgets/underline.dart';
 
 class BookPage extends StatefulWidget {
@@ -393,7 +393,18 @@ class _BookPageState extends State<BookPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            for (Review review in bps.reviews) ReviewWidget(review: review),
+            ...List.generate(bps.reviews.length, (index) {
+              Review review = bps.reviews[index];
+              return index != bps.reviews.length - 5
+                  ? ReviewWidget(review: review)
+                  : VisibilityDetector(
+                      key: Key('nearBottomReview'),
+                      onVisibilityChanged: (v) {
+                        if (v.visibleFraction > 0) bps.reviewsGetMore();
+                      },
+                      child: ReviewWidget(review: review),
+                    );
+            }),
           ],
         ),
       ),
