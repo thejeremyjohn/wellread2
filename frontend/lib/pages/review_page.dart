@@ -9,7 +9,9 @@ import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/models/book.dart';
 import 'package:wellread2frontend/models/bookshelf.dart';
+import 'package:wellread2frontend/models/review.dart';
 import 'package:wellread2frontend/providers/book_page_state.dart';
+import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 
 class ReviewPage extends StatefulWidget {
@@ -22,8 +24,9 @@ class ReviewPage extends StatefulWidget {
 
 class _ReviewPageState extends State<ReviewPage> {
   late Future<Book> _futureBook;
-  final _contentController = TextEditingController();
+  late Future<List<Review>> _futureReviews;
 
+  final _contentController = TextEditingController();
   final int _minContentLines = 5;
   int _contentLines = 5;
   final int _maxContentLines = 50;
@@ -32,6 +35,17 @@ class _ReviewPageState extends State<ReviewPage> {
   void initState() {
     super.initState();
     _futureBook = context.read<BookPageState>().bookGet(widget.bookId);
+
+    _futureReviews = context
+        .read<BookPageState>()
+        .reviewsGet({
+          'book_id': widget.bookId,
+          'user_id': context.read<UserState>().user.id.toString(),
+        })
+        .then((reviews) {
+          _contentController.text = reviews.first.content ?? '';
+          return reviews;
+        });
   }
 
   @override
@@ -47,7 +61,7 @@ class _ReviewPageState extends State<ReviewPage> {
         child: Padding(
           padding: const EdgeInsets.all(kPadding),
           child: AsyncWidget(
-            future: _futureBook,
+            future: Future.wait([_futureBook, _futureReviews]),
             builder: (context, _) {
               return Consumer<BookPageState>(
                 builder: (context, bps, _) {
@@ -72,8 +86,8 @@ class _ReviewPageState extends State<ReviewPage> {
                             TextSpan(text: ' > '),
                             TextSpan(
                               text: 'Review',
-                              // recognizer: TapGestureRecognizer()
-                              //   ..onTap = () => print('you clicked Review'),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () => print('you clicked Review'),
                             ),
                             TextSpan(text: ' > '),
                             TextSpan(text: 'Edit'),
@@ -133,7 +147,7 @@ class _ReviewPageState extends State<ReviewPage> {
                         children: [
                           Text('My rating:'),
                           RatingBar.builder(
-                            initialRating: bps.book.myRating!,
+                            initialRating: bps.reviews.first.rating.toDouble(),
                             minRating: 1,
                             itemSize: Theme.of(
                               context,
@@ -141,7 +155,7 @@ class _ReviewPageState extends State<ReviewPage> {
                             itemBuilder: (context, idx) =>
                                 Icon(Icons.star, color: Colors.amber),
                             onRatingUpdate: (rating) {
-                              if (rating != bps.book.myRating) {
+                              if (rating != bps.reviews.first.rating) {
                                 bps.reviewCreateOrUpdate(
                                   widget.bookId,
                                   rating: rating.toInt(),
@@ -231,7 +245,17 @@ class _ReviewPageState extends State<ReviewPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ElevatedButton(onPressed: () {}, child: Text('Save')),
+                          ElevatedButton(
+                            onPressed: () {
+                              bps.reviewCreateOrUpdate(
+                                widget.bookId,
+                                rating: bps.book.myRating!.toInt(),
+                                content: _contentController.text,
+                              );
+                              context.go('/book/${widget.bookId}');
+                            },
+                            child: Text('Save'),
+                          ),
                           Text('[checkbox] Add to my update feed'),
                         ],
                       ),

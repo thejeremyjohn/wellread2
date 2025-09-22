@@ -34,7 +34,11 @@ class _BookPageState extends State<BookPage> {
     String userId = context.read<UserState>().user.id.toString();
     _futureBook = context.read<BookPageState>().bookGet(widget.bookId);
     _futureBookshelves = context.read<BookPageState>().bookshelvesGet(userId);
-    _futureReviews = context.read<BookPageState>().reviewsGet(widget.bookId);
+
+    // TODO paginate reviews
+    _futureReviews = context.read<BookPageState>().reviewsGet({
+      'book_id': widget.bookId,
+    });
   }
 
   @override
@@ -306,6 +310,18 @@ class _BookPageState extends State<BookPage> {
               },
             ),
             Text('Rate this book'),
+            bps.book.myRating != 0
+                ? Clickable(
+                    onClick: () => context.go('/book/${widget.bookId}/review'),
+                    child: Text(
+                      'Review this book',
+                      style: TextStyle(
+                        color: kGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : Container(),
           ],
         ),
       ),

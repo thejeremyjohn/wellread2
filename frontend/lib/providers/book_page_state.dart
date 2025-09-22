@@ -77,10 +77,10 @@ class BookPageState extends ChangeNotifier {
 
   final List<Review> _reviews = [];
   UnmodifiableListView<Review> get reviews => UnmodifiableListView(_reviews);
-  Future<List<Review>> reviewsGet(String bookId) async {
+  Future<List<Review>> reviewsGet(Map<String, String> queryParameters) async {
     Uri endpoint = flaskUri(
       '/reviews',
-      queryParameters: {'book_id': bookId.toString()},
+      queryParameters: queryParameters,
       addProps: ['shelves', 'user_'],
     );
 
@@ -90,6 +90,7 @@ class BookPageState extends ChangeNotifier {
     List<Review> fetched = (r.data['reviews'] as List)
         .map((review) => Review.fromJson(review as Map<String, dynamic>))
         .toList();
+    if (r.data['page'] as int == 1) _reviews.clear(); // reset state if page:1
     _reviews.addAll(fetched);
 
     // TODO paginated reviews (not the same as bookshelves I guess)

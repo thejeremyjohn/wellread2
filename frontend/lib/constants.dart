@@ -10,9 +10,7 @@ final GlobalKey<NavigatorState> kShellNavKey = GlobalKey<NavigatorState>(
 
 const storage = FlutterSecureStorage();
 
-// TODO restore initialLocation to /books
-// final String initialLocation = '/books';
-final String initialLocation = '/book/1/review';
+final String initialLocation = '/books';
 
 const kPadding = 16.0;
 
