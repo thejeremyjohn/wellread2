@@ -3,6 +3,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
+import 'package:wellread2frontend/pages/author_page.dart';
 import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
@@ -103,6 +104,11 @@ class _MyAppState extends State<MyApp> {
               path: '/book/:bookId/review',
               builder: (context, state) =>
                   ReviewPage(bookId: state.pathParameters['bookId']!),
+            ),
+            GoRoute(
+              path: '/author',
+              builder: (context, state) =>
+                  AuthorPage(name: state.extra as String?),
             ),
           ],
         ),

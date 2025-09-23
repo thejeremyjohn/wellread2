@@ -368,8 +368,7 @@ class _BooksPageState extends State<BooksPage> {
                           DataCell(
                             Text(book.author),
                             onTap: () {
-                              print('`${book.author}` clicked');
-                              // TODO goto AuthorPage
+                              context.go('/author', extra: book.author);
                             },
                           ),
                           DataCell(Text(book.avgRatingString!)),
