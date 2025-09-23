@@ -83,6 +83,8 @@ class BookPageState extends ChangeNotifier {
 
   Future<void> reviewsGetMore() async {
     if (!_isAllReviewsGot && !_isReviewsGettingMore) {
+      _isReviewsGettingMore = true;
+      notifyListeners();
       await reviewsGet(_reviewsQueryParameters);
     }
   }
@@ -91,8 +93,6 @@ class BookPageState extends ChangeNotifier {
   UnmodifiableListView<Review> get reviews => UnmodifiableListView(_reviews);
   Future<List<Review>> reviewsGet(Map<String, String> queryParameters) async {
     _reviewsQueryParameters = queryParameters;
-    _isReviewsGettingMore = true;
-    notifyListeners();
 
     Uri endpoint = flaskUri(
       '/reviews',
