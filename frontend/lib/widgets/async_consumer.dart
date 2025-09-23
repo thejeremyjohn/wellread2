@@ -11,7 +11,7 @@ class AsyncConsumer<T> extends StatelessWidget {
 
   /// the value of this future is un-important / un-used
   /// however the idea is that this future resolves
-  ///  as soon as `Consumer<T>` is ready
+  /// when `Consumer<T>` will be ready
   final Future future;
 
   /// builder for `Consumer<T>`

@@ -29,7 +29,9 @@ class _ReviewPageState extends State<ReviewPage> {
   late Future<List<Bookshelf>> _futureBookshelves;
 
   final _contentController = TextEditingController();
-  final _dropdownController = TextEditingController();
+  final _shelfDropdownController = TextEditingController();
+  final _tagDropdownController = TextEditingController();
+
   final int _minContentLines = 5;
   int _contentLines = 5;
   final int _maxContentLines = 50;
@@ -53,6 +55,8 @@ class _ReviewPageState extends State<ReviewPage> {
   @override
   void dispose() {
     _contentController.dispose();
+    _shelfDropdownController.dispose();
+    _tagDropdownController.dispose();
     super.dispose();
   }
 
@@ -186,74 +190,97 @@ class _ReviewPageState extends State<ReviewPage> {
                       ),
                     ],
                   ),
-                  Row(
-                    spacing: kPadding,
-                    children: [
-                      Text('Tags:'),
-                      AsyncConsumer<BookPageState>(
-                        future: _futureBookshelves,
-                        builder: (context, bps, _) {
-                          final tagToggles =
-                              UnmodifiableListView<
-                                DropdownMenuEntry<(Bookshelf, bool)>
-                              >(
-                                bps.tags.map((tag) {
-                                  bool isTagged = bps.book.myTags.contains(tag);
-                                  return DropdownMenuEntry<(Bookshelf, bool)>(
-                                    leadingIcon: Icon(
-                                      isTagged
-                                          ? Icons.check_box_outlined
-                                          : Icons.check_box_outline_blank,
-                                    ),
-                                    value: (tag, isTagged),
-                                    label: tag.name,
-                                  );
-                                }),
-                              );
-                          return DropdownMenu<(Bookshelf, bool)>(
-                            menuHeight: 600,
-                            controller: _dropdownController,
+                  AsyncConsumer<BookPageState>(
+                    future: _futureBookshelves,
+                    builder: (context, bps, _) {
+                      List<InlineSpan> bookshelvesAndTags = [];
+                      for (Bookshelf shelf in bps.book.myShelves!) {
+                        bookshelvesAndTags.add(
+                          WidgetSpan(
+                            child: LinkText(
+                              shelf.name,
+                              onClick: () {
+                                final user = context.read<UserState>().user;
+                                context.go(
+                                  '/books?userId=${user.id}&bookshelfId=${shelf.id}',
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                        bookshelvesAndTags.add(WidgetSpan(child: Text(', ')));
+                      }
+                      bookshelvesAndTags.removeLast();
+
+                      return Row(
+                        spacing: kPadding,
+                        children: [
+                          Text('Shelves:'),
+                          DropdownMenu<(Bookshelf, bool)>(
+                            controller: _shelfDropdownController,
+                            // menuStyle: MenuStyle(
+                            //   padding: WidgetStatePropertyAll(EdgeInsets.zero),
+                            // ),
                             closeBehavior: DropdownMenuCloseBehavior.none,
-                            dropdownMenuEntries: tagToggles,
+                            dropdownMenuEntries: bps.shelves.map((shelf) {
+                              bool isTagged = bps.book.myShelf == shelf;
+                              return DropdownMenuEntry<(Bookshelf, bool)>(
+                                leadingIcon: Icon(
+                                  isTagged
+                                      ? Icons.radio_button_checked_outlined
+                                      : Icons.radio_button_off_outlined,
+                                ),
+                                value: (shelf, isTagged),
+                                label: shelf.name,
+                              );
+                            }).toList(),
+                            onSelected: (t) {
+                              if (t != null) {
+                                var (shelf, _) = t;
+                                bps.shelfChangeMembership(
+                                  bps.book.id.toString(),
+                                  shelf,
+                                );
+                                _shelfDropdownController.clear();
+                              }
+                            },
+                          ),
+                          Text('Tags:'),
+                          DropdownMenu<(Bookshelf, bool)>(
+                            menuHeight: 600,
+                            controller: _tagDropdownController,
+                            closeBehavior: DropdownMenuCloseBehavior.none,
+                            dropdownMenuEntries: bps.tags.map((tag) {
+                              bool isTagged = bps.book.myTags.contains(tag);
+                              return DropdownMenuEntry<(Bookshelf, bool)>(
+                                leadingIcon: Icon(
+                                  isTagged
+                                      ? Icons.check_box_outlined
+                                      : Icons.check_box_outline_blank,
+                                ),
+                                value: (tag, isTagged),
+                                label: tag.name,
+                              );
+                            }).toList(),
                             onSelected: (t) {
                               if (t != null) {
                                 var (tag, isTagged) = t;
                                 bps.toggleTag(tag, isTagged);
-                                _dropdownController.clear();
+                                _tagDropdownController.clear();
                               }
                             },
-                          );
-                        },
-                      ),
-                      Builder(
-                        builder: (context) {
-                          List<InlineSpan> bookshelvesAndTags = [];
-                          for (Bookshelf shelf in bps.book.myShelves!) {
-                            bookshelvesAndTags.add(
-                              WidgetSpan(
-                                child: LinkText(
-                                  shelf.name,
-                                  onClick: () {
-                                    final user = context.read<UserState>().user;
-                                    context.go(
-                                      '/books?userId=${user.id}&bookshelfId=${shelf.id}',
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                            bookshelvesAndTags.add(
-                              WidgetSpan(child: Text(', ')),
-                            );
-                          }
-                          bookshelvesAndTags.removeLast();
-                          return Text.rich(
-                            TextSpan(children: bookshelvesAndTags),
-                            maxLines: 2,
-                          );
-                        },
-                      ),
-                    ],
+                          ),
+                          Expanded(
+                            child: Text.rich(
+                              TextSpan(children: bookshelvesAndTags),
+                              softWrap: true,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   Divider(height: kPadding),
                   Row(
