@@ -5,6 +5,7 @@ import sys; sys.path.append('../')
 from backend.app import app, db, User, Book, Bookshelf, BookBookshelf, Review
 
 fake = Faker()
+Faker.seed('wellread2')
 
 
 user1 = User(first_name='guest1', last_name='guesterson',
