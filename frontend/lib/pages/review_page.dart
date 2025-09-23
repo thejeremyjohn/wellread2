@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
@@ -29,7 +28,6 @@ class _ReviewPageState extends State<ReviewPage> {
   late Future<List<Bookshelf>> _futureBookshelves;
 
   final _contentController = TextEditingController();
-  final _shelfDropdownController = TextEditingController();
   final _tagDropdownController = TextEditingController();
 
   final int _minContentLines = 5;
@@ -55,7 +53,6 @@ class _ReviewPageState extends State<ReviewPage> {
   @override
   void dispose() {
     _contentController.dispose();
-    _shelfDropdownController.dispose();
     _tagDropdownController.dispose();
     super.dispose();
   }
@@ -217,11 +214,7 @@ class _ReviewPageState extends State<ReviewPage> {
                         children: [
                           Text('Shelves:'),
                           DropdownMenu<(Bookshelf, bool)>(
-                            controller: _shelfDropdownController,
-                            // menuStyle: MenuStyle(
-                            //   padding: WidgetStatePropertyAll(EdgeInsets.zero),
-                            // ),
-                            closeBehavior: DropdownMenuCloseBehavior.none,
+                            initialSelection: (bps.book.myShelf!, true),
                             dropdownMenuEntries: bps.shelves.map((shelf) {
                               bool isTagged = bps.book.myShelf == shelf;
                               return DropdownMenuEntry<(Bookshelf, bool)>(
@@ -241,7 +234,6 @@ class _ReviewPageState extends State<ReviewPage> {
                                   bps.book.id.toString(),
                                   shelf,
                                 );
-                                _shelfDropdownController.clear();
                               }
                             },
                           ),
