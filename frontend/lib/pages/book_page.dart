@@ -35,8 +35,6 @@ class _BookPageState extends State<BookPage> {
     String userId = context.read<UserState>().user.id.toString();
     _futureBook = context.read<BookPageState>().bookGet(widget.bookId);
     _futureBookshelves = context.read<BookPageState>().bookshelvesGet(userId);
-
-    // TODO paginate reviews
     _futureReviews = context.read<BookPageState>().reviewsGet({
       'book_id': widget.bookId,
     });
@@ -293,8 +291,10 @@ class _BookPageState extends State<BookPage> {
               initialRating: bps.book.myRating!,
               minRating: 1,
               itemSize: Theme.of(context).textTheme.headlineLarge!.fontSize!,
-              itemBuilder: (context, idx) =>
-                  Icon(Icons.star, color: Colors.amber),
+              itemBuilder: (context, idx) => MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Icon(Icons.star, color: Colors.amber),
+              ),
               onRatingUpdate: (rating) {
                 if (rating != bps.book.myRating) {
                   bps.reviewCreateOrUpdate(
@@ -333,12 +333,13 @@ class _BookPageState extends State<BookPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Text(
+            LinkText(
               bps.book.author,
               style: TextStyle(
                 fontFamily: 'LibreBaskerville',
                 fontWeight: FontWeight.w400, // normal
               ),
+              onClick: () => context.go('/author', extra: bps.book.author),
             ),
             SizedBox(height: kPadding),
             Row(

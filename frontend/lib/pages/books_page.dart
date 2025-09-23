@@ -378,9 +378,8 @@ class _BooksPageState extends State<BooksPage> {
                               ).textTheme.bodyMedium!.fontSize!,
                               itemBuilder: (context, idx) =>
                                   Icon(Icons.star, color: Colors.amber),
-                              onRatingUpdate: (rating) {
-                                // TODO review_update
-                              },
+                              onRatingUpdate: (rating) {},
+                              ignoreGestures: true,
                             ),
                           ),
                         ],
