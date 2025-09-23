@@ -23,26 +23,25 @@ class _VerifyPageState extends State<VerifyPage> {
 
   Future<bool?> verify() async {
     final r = await flaskPost(flaskUri('/verify/${widget.token}'));
-    if (r.isOk) {
-      await storage.write(key: 'accessToken', value: r.data['access_token']);
-      await storage.write(key: 'refreshToken', value: r.data['refresh_token']);
-      return true;
-    }
-    throw Exception(r.error);
+    if (!r.isOk) throw Exception(r.error);
+
+    await storage.write(key: 'accessToken', value: r.data['access_token']);
+    await storage.write(key: 'refreshToken', value: r.data['refresh_token']);
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: AsyncWidget(
+        child: AsyncWidget<bool?>(
           future: _isVerified,
           builder: (context, isVerified) {
             Future.delayed(const Duration(seconds: 3), () {
               if (context.mounted) context.go('/books');
             });
             return Text(
-              isVerified
+              isVerified!
                   ? 'Thank you for verifying !\n( signing you in now... )'
                   : '',
               textAlign: TextAlign.center,

@@ -220,7 +220,7 @@ class _BooksPageState extends State<BooksPage> {
                   Container(
                     margin: EdgeInsets.all(kPadding),
                     width: constraints.maxWidth * myShelvesWidthModifier,
-                    child: AsyncWidget(
+                    child: AsyncWidget<List<Bookshelf>>(
                       future: _futureBookshelves,
                       builder: (context, bookshelves) {
                         Iterable<Bookshelf> shelves = bookshelves.take(3);

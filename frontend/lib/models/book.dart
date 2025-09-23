@@ -58,6 +58,6 @@ class Book {
   String? get avgRatingString => avgRating?.toStringAsFixed(2);
 
   Bookshelf? get myShelf => myShelves!.isNotEmpty ? myShelves!.first : null;
-  List<Bookshelf> get myTags =>
-      myShelves!.isNotEmpty ? myShelves!.sublist(1) : [];
+  Set<Bookshelf> get myTags =>
+      myShelves!.isNotEmpty ? myShelves!.sublist(1).toSet() : <Bookshelf>{};
 }

@@ -37,7 +37,9 @@ class BookPageState extends ChangeNotifier {
   UnmodifiableListView<Bookshelf> get bookshelves =>
       UnmodifiableListView(_bookshelves);
   Iterable<Bookshelf> get shelves => _bookshelves.take(3);
-  Iterable<Bookshelf> get tags => _bookshelves.skip(3).toSet();
+  Iterable<Bookshelf> get tags => _bookshelves.skip(3).toList()
+    ..sort((a, b) => a.name.compareTo(b.name))
+    ..toSet();
 
   Future<List<Bookshelf>> bookshelvesGet(String userId, {int page = 1}) async {
     Uri endpoint = flaskUri(
@@ -55,6 +57,8 @@ class BookPageState extends ChangeNotifier {
     List<Bookshelf> fetched = (r.data['bookshelves'] as List)
         .map((shelf) => Bookshelf.fromJson(shelf as Map<String, dynamic>))
         .toList();
+
+    if (r.data['page'] as int == 1) _bookshelves.clear();
 
     if (fetched.isNotEmpty) {
       extendBookshelves(fetched);

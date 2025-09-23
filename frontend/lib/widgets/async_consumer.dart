@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class AsyncWidget<T> extends StatelessWidget {
-  const AsyncWidget({
+class AsyncConsumer<T> extends StatelessWidget {
+  const AsyncConsumer({
     super.key,
     required this.future,
     required this.builder,
     this.progressIndicator,
   });
 
+  /// the value of this future is un-important / un-used
+  /// however the idea is that this future resolves
+  ///  as soon as `Consumer<T>` is ready
   final Future future;
-  final Widget Function(BuildContext context, T awaitedData) builder;
+
+  /// builder for `Consumer<T>`
+  final Widget Function(BuildContext context, T value, Widget? child) builder;
+
+  /// OPINION: null `ProgressIndicator` is best for quick loading on Web
   final ProgressIndicator? progressIndicator;
 
   @override
@@ -18,7 +26,7 @@ class AsyncWidget<T> extends StatelessWidget {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return builder(context, snapshot.data!);
+          return Consumer<T>(builder: builder);
         } else if (snapshot.hasError) {
           return Text('${snapshot.error}');
         }
