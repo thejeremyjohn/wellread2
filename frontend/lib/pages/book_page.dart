@@ -12,6 +12,7 @@ import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/column_dialog.dart';
+import 'package:wellread2frontend/widgets/link_text.dart';
 import 'package:wellread2frontend/widgets/underline.dart';
 
 class BookPage extends StatefulWidget {
@@ -305,15 +306,13 @@ class _BookPageState extends State<BookPage> {
             ),
             Text('Rate this book'),
             bps.book.myRating != 0
-                ? Clickable(
-                    onClick: () => context.go('/book/${widget.bookId}/review'),
-                    child: Text(
-                      'Review this book',
-                      style: TextStyle(
-                        color: kGreen,
-                        fontWeight: FontWeight.bold,
-                      ),
+                ? LinkText(
+                    'Review this book',
+                    style: TextStyle(
+                      color: kGreen,
+                      fontWeight: FontWeight.bold,
                     ),
+                    onClick: () => context.go('/book/${widget.bookId}/review'),
                   )
                 : Container(),
           ],

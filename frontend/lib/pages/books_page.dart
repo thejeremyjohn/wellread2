@@ -10,8 +10,7 @@ import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/user.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
-import 'package:wellread2frontend/widgets/clickable.dart';
-import 'package:wellread2frontend/widgets/text_underline_on_hover.dart';
+import 'package:wellread2frontend/widgets/link_text.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({
@@ -238,7 +237,13 @@ class _BooksPageState extends State<BooksPage> {
                               'Bookshelves',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            Clickable(
+                            LinkText(
+                              'From All Shelves (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
+                              style:
+                                  widget.userId != null &&
+                                      widget.bookshelfId == null
+                                  ? TextStyle(color: Colors.grey)
+                                  : TextStyle(),
                               onClick: () {
                                 Router.neglect(
                                   context,
@@ -247,14 +252,6 @@ class _BooksPageState extends State<BooksPage> {
                                   ),
                                 );
                               },
-                              child: TextUnderlineOnHover(
-                                'From All Shelves (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
-                                style:
-                                    widget.userId != null &&
-                                        widget.bookshelfId == null
-                                    ? TextStyle(color: Colors.grey)
-                                    : TextStyle(),
-                              ),
                             ),
                             ...shelves.map(
                               (shelf) => ShelfRow(
@@ -416,7 +413,9 @@ class ShelfRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Clickable(
+    return LinkText(
+      '${shelf.name} (${shelf.nBooks})',
+      style: isSelected ? TextStyle(color: Colors.grey) : TextStyle(),
       onClick: () {
         Router.neglect(context, () {
           Map<String, String> queryParameters = {'bookshelfId': '${shelf.id}'};
@@ -425,10 +424,6 @@ class ShelfRow extends StatelessWidget {
           context.go(loc.toString());
         });
       },
-      child: TextUnderlineOnHover(
-        '${shelf.name} (${shelf.nBooks})',
-        style: isSelected ? TextStyle(color: Colors.grey) : TextStyle(),
-      ),
     );
   }
 }

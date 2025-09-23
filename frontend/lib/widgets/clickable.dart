@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Clickable extends StatelessWidget {
   const Clickable({super.key, this.onClick, this.child});
 
-  final Function()? onClick;
+  final void Function()? onClick;
   final Widget? child;
 
   @override

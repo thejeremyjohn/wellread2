@@ -13,6 +13,7 @@ import 'package:wellread2frontend/models/review.dart';
 import 'package:wellread2frontend/providers/book_page_state.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
+import 'package:wellread2frontend/widgets/link_text.dart';
 
 class ReviewPage extends StatefulWidget {
   const ReviewPage({super.key, required this.bookId});
@@ -65,32 +66,57 @@ class _ReviewPageState extends State<ReviewPage> {
             builder: (context, _) {
               return Consumer<BookPageState>(
                 builder: (context, bps, _) {
+                  TextStyle breadcrumbStyle = Theme.of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(
+                        fontFamily: 'LibreBaskerville',
+                        fontWeight: FontWeight.w600,
+                      );
+
                   return Column(
                     spacing: kPadding,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text.rich(
-                        style: Theme.of(context).textTheme.titleMedium!
-                            .copyWith(
-                              fontFamily: 'LibreBaskerville',
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: breadcrumbStyle,
                         TextSpan(
                           children: [
-                            TextSpan(
-                              text: bps.book.title,
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () =>
+                            WidgetSpan(
+                              child: LinkText(
+                                bps.book.title,
+                                style: breadcrumbStyle,
+                                onClick: () =>
                                     context.go('/book/${widget.bookId}'),
+                              ),
                             ),
-                            TextSpan(text: ' > '),
-                            TextSpan(
-                              text: 'Review',
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () => print('you clicked Review'),
+                            WidgetSpan(
+                              child: Text(' > ', style: breadcrumbStyle),
                             ),
-                            TextSpan(text: ' > '),
-                            TextSpan(text: 'Edit'),
+                            WidgetSpan(
+                              child: LinkText(
+                                'Review',
+                                style: breadcrumbStyle,
+                                onClick: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'You have clicked Review, but-- so-- Congratulations!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      backgroundColor: kGreen,
+                                    ),
+                                  );
+                                },
+                                // TODO display review in read-mode
+                              ),
+                            ),
+                            WidgetSpan(
+                              child: Text(' > ', style: breadcrumbStyle),
+                            ),
+                            WidgetSpan(
+                              child: Text('Edit', style: breadcrumbStyle),
+                            ),
                           ],
                         ),
                       ),
@@ -104,7 +130,7 @@ class _ReviewPageState extends State<ReviewPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                  Text(
+                                  LinkText(
                                     bps.book.title,
                                     style: Theme.of(context)
                                         .textTheme
@@ -113,24 +139,29 @@ class _ReviewPageState extends State<ReviewPage> {
                                           fontFamily: 'LibreBaskerville',
                                           fontWeight: FontWeight.w600,
                                         ),
+                                    onClick: () =>
+                                        context.go('/book/${bps.book.id}'),
                                   ),
                                   Text.rich(
                                     TextSpan(
                                       children: [
-                                        TextSpan(
-                                          text: 'by ',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium!,
+                                        WidgetSpan(
+                                          child: Text(
+                                            'by ',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium!,
+                                          ),
                                         ),
-                                        TextSpan(
-                                          text: bps.book.author,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium!
-                                              .copyWith(
-                                                fontFamily: 'LibreBaskerville',
-                                              ),
+                                        WidgetSpan(
+                                          child: LinkText(
+                                            bps.book.author,
+                                            style: breadcrumbStyle,
+                                            onClick: () => context.go(
+                                              '/author',
+                                              extra: bps.book.author,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -172,17 +203,20 @@ class _ReviewPageState extends State<ReviewPage> {
                           DropdownMenuExample(),
                           Builder(
                             builder: (context) {
-                              List<TextSpan> bookshelvesAndTags = [];
+                              List<InlineSpan> bookshelvesAndTags = [];
                               for (Bookshelf shelf in bps.book.myShelves!) {
                                 bookshelvesAndTags.add(
-                                  TextSpan(
-                                    text: shelf.name,
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () =>
+                                  WidgetSpan(
+                                    child: LinkText(
+                                      shelf.name,
+                                      onClick: () =>
                                           print('you clicked ${shelf.name}'),
+                                    ),
                                   ),
                                 );
-                                bookshelvesAndTags.add(TextSpan(text: ',  '));
+                                bookshelvesAndTags.add(
+                                  WidgetSpan(child: Text(', ')),
+                                );
                               }
                               bookshelvesAndTags.removeLast();
                               return Text.rich(
