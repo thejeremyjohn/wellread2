@@ -123,7 +123,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        fontFamily: 'Montserrat',
+        fontFamily: fontFamily,
         pageTransitionsTheme: PageTransitionsTheme(
           builders: {
             for (final platform in TargetPlatform.values)

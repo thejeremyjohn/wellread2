@@ -12,6 +12,11 @@ const storage = FlutterSecureStorage();
 
 final String initialLocation = '/books';
 
+// final String fontFamily = 'Montserrat';
+// final String fontFamilyAlt = 'LibreBaskerville';
+final String fontFamily = 'LatoLatin';
+final String fontFamilyAlt = 'merriweather';
+
 const kPadding = 16.0;
 
 const kPerPage = 20;

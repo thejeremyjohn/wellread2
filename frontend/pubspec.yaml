@@ -96,5 +96,19 @@ flutter:
           style: italic
         - asset: assets/fonts/Montserrat-Bold.ttf
           weight: 700
+    - family: LatoLatin
+      fonts:
+        - asset: assets/fonts/LatoLatin-Regular.woff2
+        - asset: assets/fonts/LatoLatin-Italic.woff2
+          style: italic
+        - asset: assets/fonts/LatoLatin-Bold.woff2
+          weight: 700
+    - family: merriweather
+      fonts:
+        - asset: assets/fonts/merriweather-regular-gr.woff2
+        - asset: assets/fonts/merriweather-italic-gr.woff2
+          style: italic
+        - asset: assets/fonts/merriweather-bold-gr.woff2
+          weight: 700
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

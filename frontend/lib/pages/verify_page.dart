@@ -46,7 +46,7 @@ class _VerifyPageState extends State<VerifyPage> {
                   : '',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontFamily: 'LibreBaskerville',
+                fontFamily: fontFamilyAlt,
                 fontWeight: FontWeight.w600,
               ),
             );

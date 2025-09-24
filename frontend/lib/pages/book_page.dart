@@ -94,8 +94,7 @@ class _BookPageState extends State<BookPage> {
                                                     .textTheme
                                                     .titleLarge!
                                                     .copyWith(
-                                                      fontFamily:
-                                                          'LibreBaskerville',
+                                                      fontFamily: fontFamilyAlt,
                                                     ),
                                               ),
                                               const Text(
@@ -329,14 +328,14 @@ class _BookPageState extends State<BookPage> {
             Text(
               bps.book.title,
               style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                fontFamily: 'LibreBaskerville',
+                fontFamily: fontFamilyAlt,
                 fontWeight: FontWeight.w600,
               ),
             ),
             LinkText(
               bps.book.author,
               style: TextStyle(
-                fontFamily: 'LibreBaskerville',
+                fontFamily: fontFamilyAlt,
                 fontWeight: FontWeight.w400, // normal
               ),
               onClick: () => context.go('/author', extra: bps.book.author),
@@ -358,7 +357,7 @@ class _BookPageState extends State<BookPage> {
                 Text(
                   bps.book.avgRatingString!,
                   style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                    fontFamily: 'LibreBaskerville',
+                    fontFamily: fontFamilyAlt,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -389,7 +388,7 @@ class _BookPageState extends State<BookPage> {
             Text(
               'Community Reviews:',
               style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontFamily: 'LibreBaskerville',
+                fontFamily: fontFamilyAlt,
                 fontWeight: FontWeight.w600,
               ),
             ),

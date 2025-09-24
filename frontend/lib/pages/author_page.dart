@@ -51,7 +51,7 @@ class AuthorPage extends StatelessWidget {
                       name ?? '[Author Name]',
                       style: Theme.of(context).textTheme.headlineSmall!
                           .copyWith(
-                            fontFamily: 'LibreBaskerville',
+                            fontFamily: fontFamilyAlt,
                             fontWeight: FontWeight.w600,
                           ),
                     ),

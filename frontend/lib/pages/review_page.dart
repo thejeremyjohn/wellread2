@@ -70,7 +70,7 @@ class _ReviewPageState extends State<ReviewPage> {
                   .textTheme
                   .titleMedium!
                   .copyWith(
-                    fontFamily: 'LibreBaskerville',
+                    fontFamily: fontFamilyAlt,
                     fontWeight: FontWeight.w600,
                   );
 
@@ -127,7 +127,7 @@ class _ReviewPageState extends State<ReviewPage> {
                                 bps.book.title,
                                 style: Theme.of(context).textTheme.titleLarge!
                                     .copyWith(
-                                      fontFamily: 'LibreBaskerville',
+                                      fontFamily: fontFamilyAlt,
                                       fontWeight: FontWeight.w600,
                                     ),
                                 onClick: () =>

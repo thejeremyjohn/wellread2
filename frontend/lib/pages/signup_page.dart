@@ -221,7 +221,7 @@ class _SignupPageState extends State<SignupPage> {
               'Thanks!\nTo finish signup, click the verification link we\'ve just emailed to you.\n( Check your spam folder if you don\'t see it right away. )',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontFamily: 'LibreBaskerville',
+                fontFamily: fontFamilyAlt,
                 fontWeight: FontWeight.w600,
               ),
             );

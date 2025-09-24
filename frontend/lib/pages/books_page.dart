@@ -194,7 +194,7 @@ class _BooksPageState extends State<BooksPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final headerStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
-            fontFamily: 'LibreBaskerville',
+            fontFamily: fontFamilyAlt,
             fontWeight: FontWeight.w600,
           );
 

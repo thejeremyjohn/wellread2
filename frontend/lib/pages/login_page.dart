@@ -186,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
               'Looks like your email isn\'t verified yet so we\'ve sent you another verification link.\n( Check your spam folder if you don\'t see it right away. )',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontFamily: 'LibreBaskerville',
+                fontFamily: fontFamilyAlt,
                 fontWeight: FontWeight.w600,
               ),
             );

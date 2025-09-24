@@ -137,7 +137,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                 'We\'ve emailed you a reset-password link.\n( Check your spam folder if you don\'t see it right away. )',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  fontFamily: 'LibreBaskerville',
+                  fontFamily: fontFamilyAlt,
                   fontWeight: FontWeight.w600,
                 ),
               );
@@ -190,7 +190,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                       text: '/books',
                       style: Theme.of(context).textTheme.headlineSmall!
                           .copyWith(
-                            fontFamily: 'LibreBaskerville',
+                            fontFamily: fontFamilyAlt,
                             fontWeight: FontWeight.w600,
                             color: Colors.blue,
                           ),
@@ -200,7 +200,7 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
                   ],
                 ),
                 style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  fontFamily: 'LibreBaskerville',
+                  fontFamily: fontFamilyAlt,
                   fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
