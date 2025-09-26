@@ -2,19 +2,15 @@
 '''
 from faker import Faker
 import sys; sys.path.append('../')
-from backend.app import app, db, User, Book, Bookshelf, BookBookshelf, Review
+from backend.app import app, db, User, Book, Bookshelf, BookBookshelf, Review, BookImage
 
 fake = Faker()
-Faker.seed('wellread2')
+Faker.seed('wellread')
 
 
 user1 = User(first_name='guest1', last_name='guesterson',
              email='guest1@email.com', password='password')
-user2 = User(first_name='guest2', last_name='guesterson',
-             email='guest2@email.com', password='password')
-user3 = User(first_name='guest3', last_name='guesterson',
-             email='guest3@email.com', password='password')
-users = [user1, user2, user3]
+users = [user1]
 
 
 def random_user() -> User:
@@ -39,24 +35,8 @@ for _ in range(fake.random.randint(10, 100)):
 for user in users:
     user.bookshelves.extend(random_bookshelves())
 
-book1 = Book(
-    title='Book: The 1st',
-    author='Flying Spaghetti Monster',
-    description='The first book that ever was. The grammar, the sentence structure--it\'s damn inventive is what it is!',
-)
-book2 = Book(
-    title='If I Dit it',
-    author='Christopher Columbus',
-    description='I says to myself, I says, \'HEY, who doesnt like a nice warm blanket?\' Alright, keep your nose clean. Take a hike.'
-)
-book3 = Book(
-    title='12 Rules For-- Whoops Turns Out I\'m Completely Bat DooDoo',
-    author='Peter Jordensen',
-    description='It isn\'t easy being green. Bloody hell! And it isn\'t obvious that being addicted to benzos will do that to ya. But, there you go.'
-)
-books = [book1, book2, book3]
-
-for _ in range(fake.random.randint(100, 200)):
+books = []
+for _ in range(fake.random.randint(170, 300)):
     books.append(
         Book(
             title=fake.sentence(nb_words=fake.random.randint(1, 5)).rstrip('.').title(),
@@ -91,10 +71,17 @@ for user in users:
                         BookBookshelf(book=book, bookshelf=tag)
                     )
 
+from book_image_uuids_for_seed import goodreads_ids_by_uuid
+# assigning random image uuids to books
+# (the images pre-uploaded to s3 are not part of this repo)
+fake.random.shuffle(uuids := list(goodreads_ids_by_uuid.keys()))
+book_images = [BookImage(book=books[i], uuid=uuid, file_extension='.jpg', index=0)
+               for i, uuid in enumerate(uuids)]
 
 with app.app_context():
     db.session.add_all(users)
     db.session.add_all(books)
     db.session.add_all(books_bookshelves)
     db.session.add_all(reviews)
+    db.session.add_all(book_images)
     db.session.commit()
