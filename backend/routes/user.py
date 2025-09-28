@@ -118,6 +118,8 @@ def user_update():
     user = current_user
 
     for key, value in request.params.items():
+        if key == 'password' and (opw := request.params.get('old_password')):
+            assert user.check_password(opw), 'incorrect `old_password`'
         setattr(user, key, value)
     db.session.commit()
 
