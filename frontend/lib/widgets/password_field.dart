@@ -2,7 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:wellread2frontend/constants.dart';
 
 class PasswordField extends StatefulWidget {
-  const PasswordField({super.key, this.controller, this.onSubmitted});
+  const PasswordField({
+    super.key,
+    this.labelText = 'Password',
+    this.borderRadius,
+    this.controller,
+    this.onSubmitted,
+  });
+  final String? labelText;
+  final BorderRadius? borderRadius;
   final TextEditingController? controller;
   final Function(String)? onSubmitted;
 
@@ -17,9 +25,11 @@ class _PasswordFieldState extends State<PasswordField> {
     return TextField(
       controller: widget.controller,
       decoration: InputDecoration(
-        labelText: 'Password',
+        labelText: widget.labelText,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(kTextTabBarHeight * 0.5),
+          borderRadius:
+              widget.borderRadius ??
+              BorderRadius.circular(kTextTabBarHeight * 0.5),
         ),
         suffixIcon: IconButton(
           padding: const EdgeInsets.symmetric(horizontal: kPadding),

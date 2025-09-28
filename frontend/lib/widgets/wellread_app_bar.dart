@@ -42,7 +42,8 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: const Icon(Icons.person),
                 tooltip: 'Profile',
                 onPressed: () {
-                  print('You clicked Profile');
+                  final userId = context.read<UserState>().user.id;
+                  context.go('/profile/$userId');
                 },
               ),
               IconButton(

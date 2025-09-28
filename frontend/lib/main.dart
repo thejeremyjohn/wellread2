@@ -8,6 +8,7 @@ import 'package:wellread2frontend/pages/book_page.dart';
 import 'package:wellread2frontend/pages/books_page.dart';
 import 'package:wellread2frontend/pages/login_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wellread2frontend/pages/profile_page.dart';
 import 'package:wellread2frontend/pages/review_page.dart';
 import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/forgot_pw_page.dart';
@@ -85,6 +86,11 @@ class _MyAppState extends State<MyApp> {
           redirect: (_, __) async =>
               await isLoggedIn(context) ? null : '/login',
           routes: <RouteBase>[
+            GoRoute(
+              path: '/profile/:userId',
+              builder: (context, state) =>
+                  ProfilePage(userId: state.pathParameters['userId']!),
+            ),
             GoRoute(
               path: '/books',
               builder: (context, state) => BooksPage(
