@@ -268,7 +268,6 @@ class _BookPageState extends State<BookPage> {
               ),
             ),
           ),
-          // child: Text(bps.book.myShelf?.name ?? 'unshelved'),
           child: Text(
             context.select((BookPageState b) => b.book.myShelf?.name) ??
                 'unshelved',
@@ -411,26 +410,21 @@ class _BookPageState extends State<BookPage> {
 
     return Scaffold(
       body: Center(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Expanded(flex: 1, child: Container()), // page side spacer
-            Expanded(
-              flex: 1,
-              child: Container(
-                margin: EdgeInsets.all(kPadding),
-                child: coverAndShelf,
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: Container(
-                margin: EdgeInsets.all(kPadding),
+        child: Padding(
+          padding: EdgeInsets.all(kPadding),
+          child: Row(
+            spacing: kPadding,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 1, child: Container()), // page side spacer
+              Expanded(flex: 1, child: coverAndShelf),
+              Expanded(
+                flex: 3,
                 child: ListView(children: [bookDetails, communityReviews]),
               ),
-            ),
-            // Expanded(flex: 1, child: Container()), // page side spacer
-          ],
+              Expanded(flex: 1, child: Container()), // page side spacer
+            ],
+          ),
         ),
       ),
     );
@@ -445,24 +439,30 @@ class ReviewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      spacing: kPadding,
       children: [
         Expanded(
           flex: 1,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(child: Icon(Icons.person)),
-              Text(review.user!.fullName),
-              Text(
-                '${review.user!.nReviews!} reviews',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall!.copyWith(color: Colors.grey),
-              ),
-            ],
+          child: Clickable(
+            onClick: () => context.go('/profile/${review.user!.id}'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  backgroundColor: kGreen,
+                  child: Icon(Icons.person),
+                ),
+                Text(review.user!.fullName),
+                Text(
+                  '${review.user!.nReviews!} reviews',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall!.copyWith(color: Colors.grey),
+                ),
+              ],
+            ),
           ),
         ),
-        SizedBox(width: kPadding),
         Expanded(
           flex: 2,
           child: Column(

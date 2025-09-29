@@ -29,6 +29,7 @@ class AuthorPage extends StatelessWidget {
                             SnackBar(
                               content: Text(
                                 'You have clicked the Follow button! Congratulations!',
+                                style: TextStyle(color: Colors.white),
                               ),
                               backgroundColor: kGreen,
                             ),
@@ -56,21 +57,8 @@ class AuthorPage extends StatelessWidget {
                           ),
                     ),
                     Divider(height: kPadding),
-                    Text('He/She/They sure had a way with words.'),
-                    SizedBox(height: kPadding),
-                    SizedBox(height: kPadding),
-                    SizedBox(height: kPadding),
-                    SizedBox(height: kPadding),
-                    Row(
-                      spacing: kPadding,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(Icons.question_mark),
-                        Icon(Icons.hardware),
-                        Text('under construction'),
-                        Icon(Icons.hardware),
-                        Icon(Icons.question_mark),
-                      ],
+                    Text(
+                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer dolor leo, luctus et felis cursus, gravida mollis nisi. Morbi ut sagittis odio, sit amet dapibus ante. Ut iaculis nibh id turpis eleifend tempor. Nullam diam libero, aliquet suscipit pharetra suscipit, pulvinar vitae enim. Pellentesque id bibendum velit. Morbi orci velit, efficitur sed scelerisque quis, pulvinar eu nunc. Quisque at dui tellus. Sed diam odio, viverra non elit eget, faucibus cursus risus. Ut laoreet eros ex, sed eleifend neque gravida eu. Praesent a rhoncus nisi. Pellentesque ut mauris ipsum. Quisque blandit mauris in tortor condimentum vulputate. Donec auctor turpis pharetra orci semper cursus.',
                     ),
                   ],
                 ),
