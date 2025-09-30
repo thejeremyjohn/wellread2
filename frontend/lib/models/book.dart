@@ -49,10 +49,10 @@ class Book {
       nRatings = json['n_ratings'] as int?;
 
   Image get cover => images.isEmpty
-      ? Image.asset('images/no-cover.png')
+      ? Image.asset('assets/images/no-cover.png')
       : Image.network(images.first.url);
   Image get coverThumb => images.isEmpty
-      ? Image.asset('images/no-cover-thumb.png')
+      ? Image.asset('assets/images/no-cover-thumb.png')
       : Image.network(images.first.urlThumb);
 
   String? get avgRatingString => avgRating?.toStringAsFixed(2);

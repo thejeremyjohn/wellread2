@@ -20,7 +20,7 @@ class AuthorPage extends StatelessWidget {
                 child: Column(
                   spacing: kPadding,
                   children: <Widget>[
-                    Image.asset('images/no-author.png'),
+                    Image.asset('assets/images/no-author.png'),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
