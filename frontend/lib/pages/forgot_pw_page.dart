@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/widgets/password_field.dart';
+import 'package:wellread2frontend/widgets/spacer_body.dart';
 
 class ForgotPwPage extends StatefulWidget {
   const ForgotPwPage({super.key, required this.email, required this.token});
@@ -82,138 +83,135 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Builder(
-          builder: (context) {
-            if (widget.email != null) {
-              if (!_isForgotPasswordResponseOk) {
-                // SCENARIO 1a: forgot_password form
-                return Padding(
-                  padding: const EdgeInsets.all(kPadding),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'It\'s not so bad...',
-                        style: Theme.of(context).textTheme.bodyMedium!,
-                      ),
-                      SizedBox(height: kPadding),
-                      TextField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              kTextTabBarHeight * 0.5,
-                            ),
-                          ),
-                        ),
-                        onSubmitted: (_) => forgotPassword(context),
-                      ),
-                      SizedBox(height: kPadding),
-                      SizedBox(
-                        width: double.infinity,
-                        height: kTextTabBarHeight,
-                        child: ElevatedButton(
-                          onPressed: () => forgotPassword(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kGreen,
-                          ),
-                          child: Text(
-                            'Send me a reset-password link',
-                            style: Theme.of(context).textTheme.bodyLarge!
-                                .copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              // SCENARIO 1b: successful /forgot_password message and verification call to action
-              return Text(
-                'We\'ve emailed you a reset-password link.\n( Check your spam folder if you don\'t see it right away. )',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  fontFamily: fontFamilyAlt,
-                  fontWeight: FontWeight.w600,
-                ),
-              );
-            }
-
-            if (widget.token != null && _isVerifyResponseOk) {
-              if (!_isUserUpdateResponseOk) {
-                // SCENARIO 2a: verified -> reset-password form
-                return Padding(
-                  padding: const EdgeInsets.all(kPadding),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'What\'s your new password going to be?',
-                        style: Theme.of(context).textTheme.bodyMedium!,
-                      ),
-                      SizedBox(height: kPadding),
-                      PasswordField(
-                        controller: _passwordController,
-                        onSubmitted: (_) => setPassword(context),
-                      ),
-                      SizedBox(height: kPadding),
-                      SizedBox(
-                        width: double.infinity,
-                        height: kTextTabBarHeight,
-                        child: ElevatedButton(
-                          onPressed: () => setPassword(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kGreen,
-                          ),
-                          child: Text(
-                            'Set password',
-                            style: Theme.of(context).textTheme.bodyLarge!
-                                .copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              // SCENARIO 2b: verified and password changed -> invite to goto /books
-              return Text.rich(
-                TextSpan(
-                  text: 'Ok! You\'re signed in by the way. 👉 ',
+    return SpacerBody(
+      child: Builder(
+        builder: (context) {
+          if (widget.email != null) {
+            if (!_isForgotPasswordResponseOk) {
+              // SCENARIO 1a: forgot_password form
+              return Padding(
+                padding: const EdgeInsets.all(kPadding),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    TextSpan(
-                      text: '/books',
-                      style: Theme.of(context).textTheme.headlineSmall!
-                          .copyWith(
-                            fontFamily: fontFamilyAlt,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue,
+                    Text(
+                      'It\'s not so bad...',
+                      style: Theme.of(context).textTheme.bodyMedium!,
+                    ),
+                    SizedBox(height: kPadding),
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            kTextTabBarHeight * 0.5,
                           ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () => context.go('/books'),
+                        ),
+                      ),
+                      onSubmitted: (_) => forgotPassword(context),
+                    ),
+                    SizedBox(height: kPadding),
+                    SizedBox(
+                      width: double.infinity,
+                      height: kTextTabBarHeight,
+                      child: ElevatedButton(
+                        onPressed: () => forgotPassword(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kGreen,
+                        ),
+                        child: Text(
+                          'Send me a reset-password link',
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                  fontFamily: fontFamilyAlt,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
               );
             }
 
-            if (widget.email == null && widget.token == null) {
-              // SCENARIO 3: nothing to see here -> redirect to /login
-              context.go('/login');
+            // SCENARIO 1b: successful /forgot_password message and verification call to action
+            return Text(
+              'We\'ve emailed you a reset-password link.\n( Check your spam folder if you don\'t see it right away. )',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                fontFamily: fontFamilyAlt,
+                fontWeight: FontWeight.w600,
+              ),
+            );
+          }
+
+          if (widget.token != null && _isVerifyResponseOk) {
+            if (!_isUserUpdateResponseOk) {
+              // SCENARIO 2a: verified -> reset-password form
+              return Padding(
+                padding: const EdgeInsets.all(kPadding),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'What\'s your new password going to be?',
+                      style: Theme.of(context).textTheme.bodyMedium!,
+                    ),
+                    SizedBox(height: kPadding),
+                    PasswordField(
+                      controller: _passwordController,
+                      onSubmitted: (_) => setPassword(context),
+                    ),
+                    SizedBox(height: kPadding),
+                    SizedBox(
+                      width: double.infinity,
+                      height: kTextTabBarHeight,
+                      child: ElevatedButton(
+                        onPressed: () => setPassword(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kGreen,
+                        ),
+                        child: Text(
+                          'Set password',
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             }
-            return Container(); // placeholder
-          },
-        ),
+
+            // SCENARIO 2b: verified and password changed -> invite to goto /books
+            return Text.rich(
+              TextSpan(
+                text: 'Ok! You\'re signed in by the way. 👉 ',
+                children: [
+                  TextSpan(
+                    text: '/books',
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                      fontFamily: fontFamilyAlt,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () => context.go('/books'),
+                  ),
+                ],
+              ),
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                fontFamily: fontFamilyAlt,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            );
+          }
+
+          if (widget.email == null && widget.token == null) {
+            // SCENARIO 3: nothing to see here -> redirect to /login
+            context.go('/login');
+          }
+          return Container(); // placeholder
+        },
       ),
     );
   }

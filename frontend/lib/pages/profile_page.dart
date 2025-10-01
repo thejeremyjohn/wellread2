@@ -7,6 +7,7 @@ import 'package:wellread2frontend/models/user.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/password_field.dart';
+import 'package:wellread2frontend/widgets/spacer_body.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.userId});
@@ -67,197 +68,176 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 1, child: Container()), // page side spacer
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(kPadding),
-                child: AsyncWidget<User>(
-                  future: _futureUser,
-                  builder: (context, user) {
-                    // profile edit form
-                    if (_isMe) {
-                      return Column(
+    return SpacerBody(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: kPadding),
+        child: AsyncWidget<User>(
+          future: _futureUser,
+          builder: (context, user) {
+            // profile edit form
+            if (_isMe) {
+              return Column(
+                spacing: kPadding,
+                // mainAxisAlignment: MainAxisAlignment.center,
+                // crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Change your name? Update your password?',
+                    style: Theme.of(context).textTheme.bodyMedium!,
+                  ),
+                  FieldWithInlineSubmit(
+                    controller: _firstNameController,
+                    labelText: 'First Name',
+                    onPressed: () {
+                      userUpdate({
+                        'first_name': _firstNameController.text,
+                      }).then((r) {
+                        if (context.mounted) {
+                          r.showSnackBar(
+                            context,
+                            customMessageOnSuccess: !r.isOk
+                                ? ''
+                                : 'updated firstName',
+                          );
+                        }
+                      });
+                    },
+                  ),
+                  FieldWithInlineSubmit(
+                    controller: _lastNameController,
+                    labelText: 'Last Name',
+                    onPressed: () {
+                      userUpdate({'last_name': _lastNameController.text}).then((
+                        r,
+                      ) {
+                        if (context.mounted) {
+                          r.showSnackBar(
+                            context,
+                            customMessageOnSuccess: !r.isOk
+                                ? ''
+                                : 'updated lastName',
+                          );
+                        }
+                      });
+                    },
+                  ),
+                  // FieldWithInlineSubmit(
+                  //   controller: _emailController,
+                  //   labelText: 'Email',
+                  // onPressed: () {
+                  //   userUpdate(context, {
+                  //     'email': _emailController.text,
+                  //   });
+                  // },
+                  // ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: kPadding * 0.5,
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: PasswordField(
+                          labelText: 'Old Password',
+                          controller: _oldPasswordController,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(kTextTabBarHeight * 0.5),
+                            bottomLeft: Radius.circular(
+                              kTextTabBarHeight * 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 7,
+                        child: FieldWithInlineSubmit(
+                          flexes: (5, 2),
+                          controller: _passwordController,
+                          labelText: 'New Password',
+                          fieldBorderRadius: BorderRadius.zero,
+                          onPressed: () {
+                            userUpdate({
+                              'old_password': _oldPasswordController.text,
+                              'password': _passwordController.text,
+                            }).then((r) {
+                              if (context.mounted) {
+                                r.showSnackBar(
+                                  context,
+                                  customMessageOnSuccess: !r.isOk
+                                      ? ''
+                                      : 'updated password',
+                                );
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            } else {
+              // display other profile
+              return Row(
+                children: <Widget>[
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      margin: EdgeInsets.all(kPadding),
+                      child: Column(
                         spacing: kPadding,
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        // crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          CircleAvatar(
+                            radius: 75,
+                            backgroundColor: kGreen,
+                            child: Icon(Icons.person, size: 100),
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'You have clicked the Follow button! Congratulations!',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: kGreen,
+                                  ),
+                                );
+                              },
+                              child: Text('Follow'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      margin: EdgeInsets.all(kPadding),
+                      child: ListView(
                         children: [
                           Text(
-                            'Change your name? Update your password?',
-                            style: Theme.of(context).textTheme.bodyMedium!,
-                          ),
-                          FieldWithInlineSubmit(
-                            controller: _firstNameController,
-                            labelText: 'First Name',
-                            onPressed: () {
-                              userUpdate({
-                                'first_name': _firstNameController.text,
-                              }).then((r) {
-                                if (context.mounted) {
-                                  r.showSnackBar(
-                                    context,
-                                    customMessageOnSuccess: !r.isOk
-                                        ? ''
-                                        : 'updated firstName',
-                                  );
-                                }
-                              });
-                            },
-                          ),
-                          FieldWithInlineSubmit(
-                            controller: _lastNameController,
-                            labelText: 'Last Name',
-                            onPressed: () {
-                              userUpdate({
-                                'last_name': _lastNameController.text,
-                              }).then((r) {
-                                if (context.mounted) {
-                                  r.showSnackBar(
-                                    context,
-                                    customMessageOnSuccess: !r.isOk
-                                        ? ''
-                                        : 'updated lastName',
-                                  );
-                                }
-                              });
-                            },
-                          ),
-                          // FieldWithInlineSubmit(
-                          //   controller: _emailController,
-                          //   labelText: 'Email',
-                          // onPressed: () {
-                          //   userUpdate(context, {
-                          //     'email': _emailController.text,
-                          //   });
-                          // },
-                          // ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            spacing: kPadding * 0.5,
-                            children: [
-                              Expanded(
-                                flex: 5,
-                                child: PasswordField(
-                                  labelText: 'Old Password',
-                                  controller: _oldPasswordController,
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(
-                                      kTextTabBarHeight * 0.5,
-                                    ),
-                                    bottomLeft: Radius.circular(
-                                      kTextTabBarHeight * 0.5,
-                                    ),
-                                  ),
+                            user.fullName,
+                            style: Theme.of(context).textTheme.headlineSmall!
+                                .copyWith(
+                                  fontFamily: fontFamilyAlt,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ),
-                              Expanded(
-                                flex: 7,
-                                child: FieldWithInlineSubmit(
-                                  flexes: (5, 2),
-                                  controller: _passwordController,
-                                  labelText: 'New Password',
-                                  fieldBorderRadius: BorderRadius.zero,
-                                  onPressed: () {
-                                    userUpdate({
-                                      'old_password':
-                                          _oldPasswordController.text,
-                                      'password': _passwordController.text,
-                                    }).then((r) {
-                                      if (context.mounted) {
-                                        r.showSnackBar(
-                                          context,
-                                          customMessageOnSuccess: !r.isOk
-                                              ? ''
-                                              : 'updated password',
-                                        );
-                                      }
-                                    });
-                                  },
-                                ),
-                              ),
-                            ],
+                          ),
+                          Divider(height: kPadding),
+                          Text(
+                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer dolor leo, luctus et felis cursus, gravida mollis nisi. Morbi ut sagittis odio, sit amet dapibus ante. Ut iaculis nibh id turpis eleifend tempor. Nullam diam libero, aliquet suscipit pharetra suscipit, pulvinar vitae enim. Pellentesque id bibendum velit. Morbi orci velit, efficitur sed scelerisque quis, pulvinar eu nunc. Quisque at dui tellus. Sed diam odio, viverra non elit eget, faucibus cursus risus. Ut laoreet eros ex, sed eleifend neque gravida eu. Praesent a rhoncus nisi. Pellentesque ut mauris ipsum. Quisque blandit mauris in tortor condimentum vulputate. Donec auctor turpis pharetra orci semper cursus.',
                           ),
                         ],
-                      );
-                    } else {
-                      // display other profile
-                      return Row(
-                        children: <Widget>[
-                          Expanded(
-                            flex: 1,
-                            child: Container(
-                              margin: EdgeInsets.all(kPadding),
-                              child: Column(
-                                spacing: kPadding,
-                                children: <Widget>[
-                                  CircleAvatar(
-                                    radius: 75,
-                                    backgroundColor: kGreen,
-                                    child: Icon(Icons.person, size: 100),
-                                  ),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'You have clicked the Follow button! Congratulations!',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                            backgroundColor: kGreen,
-                                          ),
-                                        );
-                                      },
-                                      child: Text('Follow'),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Container(
-                              margin: EdgeInsets.all(kPadding),
-                              child: ListView(
-                                children: [
-                                  Text(
-                                    user.fullName,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineSmall!
-                                        .copyWith(
-                                          fontFamily: fontFamilyAlt,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  ),
-                                  Divider(height: kPadding),
-                                  Text(
-                                    'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer dolor leo, luctus et felis cursus, gravida mollis nisi. Morbi ut sagittis odio, sit amet dapibus ante. Ut iaculis nibh id turpis eleifend tempor. Nullam diam libero, aliquet suscipit pharetra suscipit, pulvinar vitae enim. Pellentesque id bibendum velit. Morbi orci velit, efficitur sed scelerisque quis, pulvinar eu nunc. Quisque at dui tellus. Sed diam odio, viverra non elit eget, faucibus cursus risus. Ut laoreet eros ex, sed eleifend neque gravida eu. Praesent a rhoncus nisi. Pellentesque ut mauris ipsum. Quisque blandit mauris in tortor condimentum vulputate. Donec auctor turpis pharetra orci semper cursus.',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              ),
-            ),
-            Expanded(flex: 1, child: Container()), // page side spacer
-          ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
         ),
       ),
     );

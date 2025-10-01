@@ -14,6 +14,7 @@ import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/clickable.dart';
 import 'package:wellread2frontend/widgets/column_dialog.dart';
 import 'package:wellread2frontend/widgets/link_text.dart';
+import 'package:wellread2frontend/widgets/spacer_body.dart';
 import 'package:wellread2frontend/widgets/underline.dart';
 
 class BookPage extends StatefulWidget {
@@ -388,23 +389,18 @@ class _BookPageState extends State<BookPage> {
       ),
     );
 
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(kPadding),
-          child: Row(
-            spacing: kPadding,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 1, child: Container()), // page side spacer
-              Expanded(flex: 1, child: coverAndShelf),
-              Expanded(
-                flex: 3,
-                child: ListView(children: [bookDetails, communityReviews]),
-              ),
-              Expanded(flex: 1, child: Container()), // page side spacer
-            ],
-          ),
+    return SpacerBody(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: kPadding),
+        child: Row(
+          spacing: kPadding,
+          children: <Widget>[
+            Expanded(flex: 1, child: coverAndShelf),
+            Expanded(
+              flex: 3,
+              child: ListView(children: [bookDetails, communityReviews]),
+            ),
+          ],
         ),
       ),
     );

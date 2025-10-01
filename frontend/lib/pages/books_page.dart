@@ -11,6 +11,7 @@ import 'package:wellread2frontend/models/user.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
 import 'package:wellread2frontend/widgets/link_text.dart';
+import 'package:wellread2frontend/widgets/spacer_body.dart';
 
 class BooksPage extends StatefulWidget {
   const BooksPage({
@@ -190,8 +191,8 @@ class _BooksPageState extends State<BooksPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
+    return SpacerBody(
+      child: LayoutBuilder(
         builder: (context, constraints) {
           final headerStyle = Theme.of(context).textTheme.bodyLarge!.copyWith(
             fontFamily: fontFamilyAlt,

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/flask_methods.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
+import 'package:wellread2frontend/widgets/spacer_body.dart';
 
 class VerifyPage extends StatefulWidget {
   const VerifyPage({super.key, required this.token});
@@ -32,26 +33,24 @@ class _VerifyPageState extends State<VerifyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: AsyncWidget<bool?>(
-          future: _isVerified,
-          builder: (context, isVerified) {
-            Future.delayed(const Duration(seconds: 3), () {
-              if (context.mounted) context.go('/books');
-            });
-            return Text(
-              isVerified!
-                  ? 'Thank you for verifying !\n( signing you in now... )'
-                  : '',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontFamily: fontFamilyAlt,
-                fontWeight: FontWeight.w600,
-              ),
-            );
-          },
-        ),
+    return SpacerBody(
+      child: AsyncWidget<bool?>(
+        future: _isVerified,
+        builder: (context, isVerified) {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (context.mounted) context.go('/books');
+          });
+          return Text(
+            isVerified!
+                ? 'Thank you for verifying !\n( signing you in now... )'
+                : '',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+              fontFamily: fontFamilyAlt,
+              fontWeight: FontWeight.w600,
+            ),
+          );
+        },
       ),
     );
   }
