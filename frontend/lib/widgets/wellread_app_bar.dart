@@ -20,7 +20,18 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('wellread'),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: 'well', style: TextStyle()),
+                TextSpan(
+                  text: 'read',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.max,

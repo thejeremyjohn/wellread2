@@ -205,11 +205,33 @@ class _BooksPageState extends State<BooksPage> {
                 margin: EdgeInsets.all(kPadding),
                 child: widget.userId == null
                     ? Text('All Books', style: headerStyle)
-                    : AsyncWidget(
+                    : AsyncWidget<User>(
                         future: _futureUser,
-                        builder: (context, user) => Text(
-                          '${(user as User).firstName}\'s Books',
-                          style: headerStyle,
+                        builder: (context, user) => Row(
+                          spacing: kPadding,
+                          children: [
+                            Text(
+                              '${user.firstName}\'s Books',
+                              style: headerStyle,
+                            ),
+                            widget.bookshelfId == null
+                                ? Container()
+                                : AsyncWidget<List<Bookshelf>>(
+                                    future: _futureBookshelves,
+                                    builder: (context, bookshelves) {
+                                      int? aId = int.parse(widget.bookshelfId!);
+                                      final shelf = bookshelves.firstWhere(
+                                        (b) => aId == b.id,
+                                      );
+                                      return Text(
+                                        '> ${shelf.name}',
+                                        style: headerStyle.copyWith(
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ],
                         ),
                       ),
               ),
@@ -229,6 +251,11 @@ class _BooksPageState extends State<BooksPage> {
                             .toSet()
                             .toList();
                         tags.sort((a, b) => a.name.compareTo(b.name));
+                        String meId = context
+                            .read<UserState>()
+                            .user
+                            .id
+                            .toString();
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +275,7 @@ class _BooksPageState extends State<BooksPage> {
                                 Router.neglect(
                                   context,
                                   () => context.go(
-                                    '/books?userId=${widget.userId ?? context.read<UserState>().user.id}',
+                                    '/books?userId=${widget.userId ?? meId}',
                                   ),
                                 );
                               },
@@ -258,7 +285,7 @@ class _BooksPageState extends State<BooksPage> {
                                 shelf: shelf,
                                 isSelected:
                                     shelf.id.toString() == widget.bookshelfId,
-                                userId: widget.userId,
+                                userId: widget.userId ?? meId,
                               ),
                             ),
                             Divider(height: kPadding),
@@ -267,12 +294,11 @@ class _BooksPageState extends State<BooksPage> {
                                 shelf: tag,
                                 isSelected:
                                     tag.id.toString() == widget.bookshelfId,
-                                userId: widget.userId,
+                                userId: widget.userId ?? meId,
                               ),
                             ),
                             SizedBox(height: kPadding * 0.5),
-                            widget.userId ==
-                                    context.read<UserState>().user.id.toString()
+                            widget.userId == meId
                                 ? AddShelf(
                                     onAdd: (tagName) =>
                                         tagCreate(context, tagName),
