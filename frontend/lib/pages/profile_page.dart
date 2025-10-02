@@ -23,7 +23,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _oldPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -39,7 +38,6 @@ class _ProfilePageState extends State<ProfilePage> {
       _isMe = true;
       _firstNameController.text = me.firstName;
       _lastNameController.text = me.lastName;
-      _emailController.text = me.email;
       return me;
     }
 
@@ -56,14 +54,14 @@ class _ProfilePageState extends State<ProfilePage> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
-    _emailController.dispose();
     _oldPasswordController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<FlaskResponse> userUpdate(Map<String, String> body) async {
-    return await flaskPut(flaskUri('/user'), body: body);
+    final r = await flaskPut(flaskUri('/user'), body: body);
+    return r;
   }
 
   @override
@@ -76,8 +74,6 @@ class _ProfilePageState extends State<ProfilePage> {
           if (_isMe) {
             return Column(
               spacing: kPadding,
-              // mainAxisAlignment: MainAxisAlignment.center,
-              // crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Change your name? Update your password?',
@@ -97,6 +93,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               ? ''
                               : 'updated firstName',
                         );
+                        if (r.isOk) {
+                          context.read<UserState>().setUserFromJson(
+                            r.data['user'],
+                          );
+                        }
                       }
                     });
                   },
@@ -115,19 +116,15 @@ class _ProfilePageState extends State<ProfilePage> {
                               ? ''
                               : 'updated lastName',
                         );
+                        if (r.isOk) {
+                          context.read<UserState>().setUserFromJson(
+                            r.data['user'],
+                          );
+                        }
                       }
                     });
                   },
                 ),
-                // FieldWithInlineSubmit(
-                //   controller: _emailController,
-                //   labelText: 'Email',
-                // onPressed: () {
-                //   userUpdate(context, {
-                //     'email': _emailController.text,
-                //   });
-                // },
-                // ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: kPadding * 0.5,
@@ -162,6 +159,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ? ''
                                     : 'updated password',
                               );
+                              if (r.isOk) {
+                                context.read<UserState>().setUserFromJson(
+                                  r.data['user'],
+                                );
+                              }
                             }
                           });
                         },
