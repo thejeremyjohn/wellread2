@@ -32,6 +32,15 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _oldPasswordController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<User> userGet() async {
     User me = context.read<UserState>().user;
     if (me.id.toString() == widget.userId) {
@@ -50,18 +59,35 @@ class _ProfilePageState extends State<ProfilePage> {
         .first;
   }
 
-  @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _oldPasswordController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  Future<FlaskResponse> userUpdate(Map<String, String> body) async {
+    return await flaskPut(flaskUri('/user'), body: body);
   }
 
-  Future<FlaskResponse> userUpdate(Map<String, String> body) async {
-    final r = await flaskPut(flaskUri('/user'), body: body);
-    return r;
+  void updateFirstName(BuildContext context) {
+    userUpdate({'first_name': _firstNameController.text}).then((r) {
+      if (context.mounted) reflectUpdated(context, r, 'firstName');
+    });
+  }
+
+  void updateLastName(BuildContext context) {
+    userUpdate({'last_name': _lastNameController.text}).then((r) {
+      if (context.mounted) reflectUpdated(context, r, 'lastName');
+    });
+  }
+
+  void updatePassword(BuildContext context) {
+    userUpdate({
+      'old_password': _oldPasswordController.text,
+      'password': _passwordController.text,
+    }).then((r) {
+      if (context.mounted) reflectUpdated(context, r, 'password');
+    });
+  }
+
+  void reflectUpdated(BuildContext context, FlaskResponse r, String fieldName) {
+    final String m = r.isOk ? 'updated $fieldName' : '';
+    r.showSnackBar(context, customMessageOnSuccess: m);
+    if (r.isOk) context.read<UserState>().setUserFromJson(r.data['user']);
   }
 
   @override
@@ -82,48 +108,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 FieldWithInlineSubmit(
                   controller: _firstNameController,
                   labelText: 'First Name',
-                  onPressed: () {
-                    userUpdate({'first_name': _firstNameController.text}).then((
-                      r,
-                    ) {
-                      if (context.mounted) {
-                        r.showSnackBar(
-                          context,
-                          customMessageOnSuccess: !r.isOk
-                              ? ''
-                              : 'updated firstName',
-                        );
-                        if (r.isOk) {
-                          context.read<UserState>().setUserFromJson(
-                            r.data['user'],
-                          );
-                        }
-                      }
-                    });
-                  },
+                  onPressed: () => updateFirstName(context),
                 ),
                 FieldWithInlineSubmit(
                   controller: _lastNameController,
                   labelText: 'Last Name',
-                  onPressed: () {
-                    userUpdate({'last_name': _lastNameController.text}).then((
-                      r,
-                    ) {
-                      if (context.mounted) {
-                        r.showSnackBar(
-                          context,
-                          customMessageOnSuccess: !r.isOk
-                              ? ''
-                              : 'updated lastName',
-                        );
-                        if (r.isOk) {
-                          context.read<UserState>().setUserFromJson(
-                            r.data['user'],
-                          );
-                        }
-                      }
-                    });
-                  },
+                  onPressed: () => updateLastName(context),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -141,32 +131,21 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     Expanded(
-                      flex: 7,
-                      child: FieldWithInlineSubmit(
-                        flexes: (5, 2),
+                      flex: 5,
+                      child: PasswordField(
                         controller: _passwordController,
                         labelText: 'New Password',
-                        fieldBorderRadius: BorderRadius.zero,
-                        onPressed: () {
-                          userUpdate({
-                            'old_password': _oldPasswordController.text,
-                            'password': _passwordController.text,
-                          }).then((r) {
-                            if (context.mounted) {
-                              r.showSnackBar(
-                                context,
-                                customMessageOnSuccess: !r.isOk
-                                    ? ''
-                                    : 'updated password',
-                              );
-                              if (r.isOk) {
-                                context.read<UserState>().setUserFromJson(
-                                  r.data['user'],
-                                );
-                              }
-                            }
-                          });
-                        },
+                        borderRadius: BorderRadius.zero,
+                        onSubmitted: (_) => updatePassword(context),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: kTextTabBarHeight,
+                        child: InlineFieldSubmitButton(
+                          onPressed: () => updatePassword(context),
+                        ),
                       ),
                     ),
                   ],
