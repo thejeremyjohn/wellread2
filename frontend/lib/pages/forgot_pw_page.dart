@@ -89,46 +89,41 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
           if (widget.email != null) {
             if (!_isForgotPasswordResponseOk) {
               // SCENARIO 1a: forgot_password form
-              return Padding(
-                padding: const EdgeInsets.all(kPadding),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'It\'s not so bad...',
-                      style: Theme.of(context).textTheme.bodyMedium!,
-                    ),
-                    SizedBox(height: kPadding),
-                    TextField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            kTextTabBarHeight * 0.5,
-                          ),
-                        ),
-                      ),
-                      onSubmitted: (_) => forgotPassword(context),
-                    ),
-                    SizedBox(height: kPadding),
-                    SizedBox(
-                      width: double.infinity,
-                      height: kTextTabBarHeight,
-                      child: ElevatedButton(
-                        onPressed: () => forgotPassword(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kGreen,
-                        ),
-                        child: Text(
-                          'Send me a reset-password link',
-                          style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(fontWeight: FontWeight.bold),
+              return Column(
+                spacing: kPadding,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'It\'s not so bad...',
+                    style: Theme.of(context).textTheme.bodyMedium!,
+                  ),
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          kTextTabBarHeight * 0.5,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                    onSubmitted: (_) => forgotPassword(context),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: kTextTabBarHeight,
+                    child: ElevatedButton(
+                      onPressed: () => forgotPassword(context),
+                      style: ElevatedButton.styleFrom(backgroundColor: kGreen),
+                      child: Text(
+                        'Send me a reset-password link',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             }
 
@@ -146,38 +141,33 @@ class _ForgotPwPageState extends State<ForgotPwPage> {
           if (widget.token != null && _isVerifyResponseOk) {
             if (!_isUserUpdateResponseOk) {
               // SCENARIO 2a: verified -> reset-password form
-              return Padding(
-                padding: const EdgeInsets.all(kPadding),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'What\'s your new password going to be?',
-                      style: Theme.of(context).textTheme.bodyMedium!,
-                    ),
-                    SizedBox(height: kPadding),
-                    PasswordField(
-                      controller: _passwordController,
-                      onSubmitted: (_) => setPassword(context),
-                    ),
-                    SizedBox(height: kPadding),
-                    SizedBox(
-                      width: double.infinity,
-                      height: kTextTabBarHeight,
-                      child: ElevatedButton(
-                        onPressed: () => setPassword(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kGreen,
-                        ),
-                        child: Text(
-                          'Set password',
-                          style: Theme.of(context).textTheme.bodyLarge!
-                              .copyWith(fontWeight: FontWeight.bold),
+              return Column(
+                spacing: kPadding,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'What\'s your new password going to be?',
+                    style: Theme.of(context).textTheme.bodyMedium!,
+                  ),
+                  PasswordField(
+                    controller: _passwordController,
+                    onSubmitted: (_) => setPassword(context),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: kTextTabBarHeight,
+                    child: ElevatedButton(
+                      onPressed: () => setPassword(context),
+                      style: ElevatedButton.styleFrom(backgroundColor: kGreen),
+                      child: Text(
+                        'Set password',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               );
             }
 

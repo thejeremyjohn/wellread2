@@ -86,130 +86,127 @@ class _SignupPageState extends State<SignupPage> {
         builder: (context) {
           if (!_isSignupResponseOk) {
             // signup form
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: kPadding),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Well met, newcomer!',
-                    style: Theme.of(context).textTheme.bodyLarge!,
-                  ),
-                  SizedBox(height: kPadding * 0.5),
-                  Text(
-                    'Create an account why don\'t ye?',
-                    style: Theme.of(context).textTheme.bodyMedium!,
-                  ),
-                  SizedBox(height: kPadding),
-                  TextField(
-                    controller: _firstNameController,
-                    decoration: InputDecoration(
-                      labelText: 'First Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          kTextTabBarHeight * 0.5,
-                        ),
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Well met, newcomer!',
+                  style: Theme.of(context).textTheme.bodyLarge!,
+                ),
+                SizedBox(height: kPadding * 0.5),
+                Text(
+                  'Create an account why don\'t ye?',
+                  style: Theme.of(context).textTheme.bodyMedium!,
+                ),
+                SizedBox(height: kPadding),
+                TextField(
+                  controller: _firstNameController,
+                  decoration: InputDecoration(
+                    labelText: 'First Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        kTextTabBarHeight * 0.5,
                       ),
                     ),
                   ),
-                  SizedBox(height: kPadding),
-                  TextField(
-                    controller: _lastNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Last Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          kTextTabBarHeight * 0.5,
-                        ),
+                ),
+                SizedBox(height: kPadding),
+                TextField(
+                  controller: _lastNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Last Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        kTextTabBarHeight * 0.5,
                       ),
                     ),
                   ),
-                  SizedBox(height: kPadding),
-                  TextField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          kTextTabBarHeight * 0.5,
-                        ),
+                ),
+                SizedBox(height: kPadding),
+                TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        kTextTabBarHeight * 0.5,
                       ),
                     ),
                   ),
-                  SizedBox(height: kPadding),
-                  PasswordField(
-                    controller: _passwordController,
-                    onSubmitted: (_) => submitSignup(
+                ),
+                SizedBox(height: kPadding),
+                PasswordField(
+                  controller: _passwordController,
+                  onSubmitted: (_) => submitSignup(
+                    context,
+                    _firstNameController.text,
+                    _lastNameController.text,
+                    _emailController.text,
+                    _passwordController.text,
+                  ),
+                ),
+                SizedBox(height: kPadding),
+                SizedBox(
+                  width: double.infinity,
+                  height: kTextTabBarHeight,
+                  child: ElevatedButton(
+                    onPressed: () => submitSignup(
                       context,
                       _firstNameController.text,
                       _lastNameController.text,
                       _emailController.text,
                       _passwordController.text,
                     ),
-                  ),
-                  SizedBox(height: kPadding),
-                  SizedBox(
-                    width: double.infinity,
-                    height: kTextTabBarHeight,
-                    child: ElevatedButton(
-                      onPressed: () => submitSignup(
-                        context,
-                        _firstNameController.text,
-                        _lastNameController.text,
-                        _emailController.text,
-                        _passwordController.text,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade800,
-                      ),
-                      child: Text(
-                        'Sign up!',
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade800,
+                    ),
+                    child: Text(
+                      'Sign up!',
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  SizedBox(height: kPadding),
-                  SizedBox(
-                    width: double.infinity,
-                    child: Text.rich(
-                      TextSpan(
-                        text: 'Already have an account? 👉 ',
-                        children: [
-                          TextSpan(
-                            text: 'Sign in',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () => context.go('/login'),
+                ),
+                SizedBox(height: kPadding),
+                SizedBox(
+                  width: double.infinity,
+                  child: Text.rich(
+                    TextSpan(
+                      text: 'Already have an account? 👉 ',
+                      children: [
+                        TextSpan(
+                          text: 'Sign in',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
                           ),
-                          TextSpan(text: ' or 👇'),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SizedBox(height: kPadding * 0.5),
-                  SizedBox(
-                    width: double.infinity,
-                    height: kTextTabBarHeight,
-                    child: ElevatedButton(
-                      onPressed: () =>
-                          submitLogin(context, 'guest1@email.com', 'password'),
-                      style: ElevatedButton.styleFrom(backgroundColor: kGreen),
-                      child: Text(
-                        'Continue as guest',
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontWeight: FontWeight.bold,
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => context.go('/login'),
                         ),
+                        TextSpan(text: ' or 👇'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: kPadding * 0.5),
+                SizedBox(
+                  width: double.infinity,
+                  height: kTextTabBarHeight,
+                  child: ElevatedButton(
+                    onPressed: () =>
+                        submitLogin(context, 'guest1@email.com', 'password'),
+                    style: ElevatedButton.styleFrom(backgroundColor: kGreen),
+                    child: Text(
+                      'Continue as guest',
+                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           }
 

@@ -390,18 +390,15 @@ class _BookPageState extends State<BookPage> {
     );
 
     return SpacerBody(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: kPadding),
-        child: Row(
-          spacing: kPadding,
-          children: <Widget>[
-            Expanded(flex: 1, child: coverAndShelf),
-            Expanded(
-              flex: 3,
-              child: ListView(children: [bookDetails, communityReviews]),
-            ),
-          ],
-        ),
+      child: Row(
+        spacing: kPadding,
+        children: <Widget>[
+          Expanded(flex: 1, child: coverAndShelf),
+          Expanded(
+            flex: 3,
+            child: ListView(children: [bookDetails, communityReviews]),
+          ),
+        ],
       ),
     );
   }

@@ -200,117 +200,111 @@ class _BooksPageState extends State<BooksPage> {
           );
 
           return ListView(
-            padding: EdgeInsets.all(kPadding),
             children: [
-              Container(
-                margin: EdgeInsets.all(kPadding),
-                child: widget.userId == null
-                    ? Text('All Books', style: headerStyle)
-                    : AsyncWidget<User>(
-                        future: _futureUser,
-                        builder: (context, user) => Row(
-                          spacing: kPadding,
-                          children: [
-                            Text(
-                              '${user.firstName}\'s Books',
-                              style: headerStyle,
-                            ),
-                            widget.bookshelfId == null
-                                ? Container()
-                                : AsyncWidget<List<Bookshelf>>(
-                                    future: _futureBookshelves,
-                                    builder: (context, bookshelves) {
-                                      int? aId = int.parse(widget.bookshelfId!);
-                                      final shelf = bookshelves.firstWhere(
-                                        (b) => aId == b.id,
-                                      );
-                                      return Text(
-                                        '> ${shelf.name}',
-                                        style: headerStyle.copyWith(
-                                          color: Colors.grey,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ],
-                        ),
+              widget.userId == null
+                  ? Text('All Books', style: headerStyle)
+                  : AsyncWidget<User>(
+                      future: _futureUser,
+                      builder: (context, user) => Row(
+                        spacing: kPadding,
+                        children: [
+                          Text(
+                            '${user.firstName}\'s Books',
+                            style: headerStyle,
+                          ),
+                          widget.bookshelfId == null
+                              ? Container()
+                              : AsyncWidget<List<Bookshelf>>(
+                                  future: _futureBookshelves,
+                                  builder: (context, bookshelves) {
+                                    int? aId = int.parse(widget.bookshelfId!);
+                                    final shelf = bookshelves.firstWhere(
+                                      (b) => aId == b.id,
+                                    );
+                                    return Text(
+                                      '> ${shelf.name}',
+                                      style: headerStyle.copyWith(
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                ),
+                        ],
                       ),
-              ),
-
+                    ),
+              SizedBox(height: kPadding),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: kPadding,
                 children: [
-                  Container(
-                    margin: EdgeInsets.all(kPadding),
-                    width: constraints.maxWidth * myShelvesWidthModifier,
-                    child: AsyncWidget<List<Bookshelf>>(
-                      future: _futureBookshelves,
-                      builder: (context, bookshelves) {
-                        Iterable<Bookshelf> shelves = bookshelves.take(3);
-                        List<Bookshelf> tags = bookshelves
-                            .skip(3)
-                            .toSet()
-                            .toList();
-                        tags.sort((a, b) => a.name.compareTo(b.name));
-                        String meId = context
-                            .read<UserState>()
-                            .user
-                            .id
-                            .toString();
+                  AsyncWidget<List<Bookshelf>>(
+                    future: _futureBookshelves,
+                    builder: (context, bookshelves) {
+                      Iterable<Bookshelf> shelves = bookshelves.take(3);
+                      List<Bookshelf> tags = bookshelves
+                          .skip(3)
+                          .toSet()
+                          .toList();
+                      tags.sort((a, b) => a.name.compareTo(b.name));
+                      String meId = context
+                          .read<UserState>()
+                          .user
+                          .id
+                          .toString();
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'Bookshelves',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Bookshelves',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          LinkText(
+                            'From All Shelves (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
+                            style:
+                                widget.userId != null &&
+                                    widget.bookshelfId == null
+                                ? TextStyle(color: Colors.grey)
+                                : TextStyle(),
+                            onClick: () {
+                              Router.neglect(
+                                context,
+                                () => context.go(
+                                  '/books?userId=${widget.userId ?? meId}',
+                                ),
+                              );
+                            },
+                          ),
+                          ...shelves.map(
+                            (shelf) => ShelfRow(
+                              shelf: shelf,
+                              isSelected:
+                                  shelf.id.toString() == widget.bookshelfId,
+                              userId: widget.userId ?? meId,
                             ),
-                            LinkText(
-                              'From All Shelves (${shelves.map((s) => s.nBooks!).reduce((a, b) => a + b)})',
-                              style:
-                                  widget.userId != null &&
-                                      widget.bookshelfId == null
-                                  ? TextStyle(color: Colors.grey)
-                                  : TextStyle(),
-                              onClick: () {
-                                Router.neglect(
-                                  context,
-                                  () => context.go(
-                                    '/books?userId=${widget.userId ?? meId}',
-                                  ),
-                                );
-                              },
+                          ),
+                          Divider(height: kPadding),
+                          ...tags.map(
+                            (tag) => ShelfRow(
+                              shelf: tag,
+                              isSelected:
+                                  tag.id.toString() == widget.bookshelfId,
+                              userId: widget.userId ?? meId,
                             ),
-                            ...shelves.map(
-                              (shelf) => ShelfRow(
-                                shelf: shelf,
-                                isSelected:
-                                    shelf.id.toString() == widget.bookshelfId,
-                                userId: widget.userId ?? meId,
-                              ),
-                            ),
-                            Divider(height: kPadding),
-                            ...tags.map(
-                              (tag) => ShelfRow(
-                                shelf: tag,
-                                isSelected:
-                                    tag.id.toString() == widget.bookshelfId,
-                                userId: widget.userId ?? meId,
-                              ),
-                            ),
-                            SizedBox(height: kPadding * 0.5),
-                            widget.userId == meId
-                                ? AddShelf(
-                                    onAdd: (tagName) =>
-                                        tagCreate(context, tagName),
-                                  )
-                                : Container(),
-                          ],
-                        );
-                      },
-                    ),
+                          ),
+                          SizedBox(height: kPadding * 0.5),
+                          widget.userId == meId
+                              ? AddShelf(
+                                  onAdd: (tagName) =>
+                                      tagCreate(context, tagName),
+                                )
+                              : Container(),
+                        ],
+                      );
+                    },
                   ),
                   DataTable(
+                    headingRowHeight: kTextTabBarHeight,
                     horizontalMargin: 0,
                     columnSpacing: kPadding,
                     dataRowMinHeight: dataRowHeight,
