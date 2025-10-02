@@ -61,6 +61,7 @@ app.config['CLOUDFRONT_DISTRIBUTION_ID'] = 'E3LQF93MJV6OVM'
 app.config['CLOUDFRONT_URL_GENERIC'] = 'https://d1nvc7nzk5ttp8.cloudfront.net'
 app.config['CLOUDFRONT_DISTRIBUTION_ID_GENERIC'] = 'E2CMUYDH5LNP77'
 app.config['CLOUDFRONT_SIGNER'] = mk_cloudfront_signer()
+app.config['FRONTEND_HOST'] = os.environ.get('FRONTEND_HOST', 'http://localhost:8000')
 
 cors = CORS(app, resources={r"/*": {"origins": "*"}})  # NB for local development ONLY
 db = SQLAlchemy(app,

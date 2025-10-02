@@ -25,7 +25,7 @@ def _send_verification_email(user: User):
         'Verify your email w/ wellread',
         text_body=f'''
             Glad you could join us. Click the link below to verify:
-            http://localhost:8000/verify?token={pending_user_verification.token}
+            {app.config['FRONTEND_HOST']}/verify?token={pending_user_verification.token}
         '''.strip()
     )
 
@@ -39,7 +39,7 @@ def _send_forgot_password_verification_email(user: User):
         'wellread password-reset',
         text_body=f'''
             It happens to everybody. Click here to set your password:
-            http://localhost:8000/forgotpw?token={pending_user_verification.token}
+            {app.config['FRONTEND_HOST']}/forgotpw?token={pending_user_verification.token}
         '''.strip()
     )
 
