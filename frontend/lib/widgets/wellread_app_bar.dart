@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
+import 'package:wellread2frontend/widgets/search_books_bar.dart';
 
 class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
   const WellreadAppBar({super.key});
@@ -16,7 +18,7 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.brown,
+      backgroundColor: kBrown,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -67,19 +69,7 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
           Container(),
         ],
       ),
-      actions: [
-        SizedBox(
-          width: 200,
-          child: TextFormField(
-            decoration: InputDecoration(
-              border: UnderlineInputBorder(),
-              labelText: 'Search books',
-              suffixIcon: Icon(Icons.search),
-            ),
-            // onEditingComplete: , TODO search books
-          ),
-        ),
-      ],
+      actions: [SizedBox(width: 150, child: SearchBooksBar())],
     );
   }
 }

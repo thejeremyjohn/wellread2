@@ -103,8 +103,10 @@ class _MyAppState extends State<MyApp> {
             ),
             GoRoute(
               path: '/book/:bookId',
-              builder: (context, state) =>
-                  BookPage(bookId: state.pathParameters['bookId']!),
+              builder: (context, state) => BookPage(
+                key: UniqueKey(), // forces .go([same]) to trigger initState
+                bookId: state.pathParameters['bookId']!,
+              ),
             ),
             GoRoute(
               path: '/book/:bookId/review',

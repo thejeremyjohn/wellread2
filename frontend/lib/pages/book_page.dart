@@ -422,7 +422,7 @@ class ReviewWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: kGreen,
+                  backgroundColor: kBrown,
                   child: Icon(Icons.person),
                 ),
                 Text(review.user!.fullName),

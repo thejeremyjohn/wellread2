@@ -21,4 +21,6 @@ const kPadding = 16.0;
 
 const kPerPage = 20;
 
+Color kBrown = const Color(0xFF261e15);
+Color kGreenLt = Colors.green.shade300;
 Color kGreen = Colors.green.shade800;
