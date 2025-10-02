@@ -29,7 +29,7 @@ def books_get():
     title = request.args.get('title')
     if title != None:
         books = books \
-            .filter(Book.title == title)
+            .filter(Book.title.ilike(f"%{title}%"))
 
     id = request.args.get('id', type=int)
     if id != None:
