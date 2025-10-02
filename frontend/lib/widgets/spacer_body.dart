@@ -8,19 +8,27 @@ class SpacerBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    int lrFlex = isLandscape ? 1 : 0;
+    double horizontalPadding = !isLandscape ? kPadding : 0;
+
     return Scaffold(
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 1, child: Container()), // page side spacer
+          Expanded(flex: lrFlex, child: Container()), // page side spacer
           Expanded(
             flex: flex,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: kPadding),
+              padding: EdgeInsets.symmetric(
+                vertical: kPadding,
+                horizontal: horizontalPadding,
+              ),
               child: child,
             ),
           ),
-          Expanded(flex: 1, child: Container()), // page side spacer
+          Expanded(flex: lrFlex, child: Container()), // page side spacer
         ],
       ),
     );
