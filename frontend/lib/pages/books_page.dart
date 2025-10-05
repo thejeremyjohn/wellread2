@@ -10,6 +10,7 @@ import 'package:wellread2frontend/models/bookshelf.dart';
 import 'package:wellread2frontend/models/user.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/async_widget.dart';
+import 'package:wellread2frontend/widgets/column_dialog.dart';
 import 'package:wellread2frontend/widgets/link_text.dart';
 import 'package:wellread2frontend/widgets/spacer_body.dart';
 
@@ -290,6 +291,11 @@ class _BooksPageState extends State<BooksPage> {
                               isSelected:
                                   tag.id.toString() == widget.bookshelfId,
                               userId: widget.userId ?? meId,
+                              canDelete: widget.userId == meId,
+                              callback: () {
+                                _futureBookshelves = fetchBookshelves();
+                                setState(() {});
+                              },
                             ),
                           ),
                           SizedBox(height: kPadding * 0.5),
@@ -417,33 +423,181 @@ class _BooksPageState extends State<BooksPage> {
   }
 }
 
-class ShelfRow extends StatelessWidget {
+class ShelfRow extends StatefulWidget {
   const ShelfRow({
     super.key,
     required this.shelf,
     this.isSelected = false,
-    this.userId,
+    required this.userId,
     this.style = const TextStyle(),
+    this.canDelete = false,
+    this.callback,
   });
 
   final Bookshelf shelf;
   final bool isSelected;
-  final String? userId;
+  final String userId;
   final TextStyle style;
+  final bool canDelete;
+  final void Function()? callback;
+
+  @override
+  State<ShelfRow> createState() => _ShelfRowState();
+}
+
+class _ShelfRowState extends State<ShelfRow> {
+  bool _hover = false;
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    _controller.text = widget.shelf.name;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return LinkText(
-      '${shelf.name} (${shelf.nBooks})',
-      style: isSelected ? TextStyle(color: Colors.grey) : TextStyle(),
-      onClick: () {
-        Router.neglect(context, () {
-          Map<String, String> queryParameters = {'bookshelfId': '${shelf.id}'};
-          if (userId != null) queryParameters['userId'] = userId!;
-          Uri loc = Uri(path: '/books', queryParameters: queryParameters);
-          context.go(loc.toString());
-        });
+    return MouseRegion(
+      onEnter: (_) {
+        if (context.mounted) setState(() => _hover = true);
       },
+      onExit: (_) {
+        if (context.mounted) setState(() => _hover = false);
+      },
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minWidth: 150),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            LinkText(
+              '${widget.shelf.name} (${widget.shelf.nBooks})',
+              style: widget.isSelected
+                  ? TextStyle(color: Colors.grey)
+                  : TextStyle(),
+              onClick: () {
+                Router.neglect(context, () {
+                  context.go(
+                    '/books?bookshelfId=${widget.shelf.id}&userId=${widget.userId}',
+                  );
+                });
+              },
+            ),
+            _hover && widget.canDelete
+                ? Row(
+                    children: [
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(maxHeight: 20),
+                        icon: const Icon(Icons.edit, size: 20),
+                        tooltip: 'rename',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) => ColumnDialog(
+                              children: <Widget>[
+                                Text(
+                                  'Rename this shelf?',
+                                  style: Theme.of(context).textTheme.titleLarge!
+                                      .copyWith(fontFamily: fontFamilyAlt),
+                                ),
+                                TextFormField(
+                                  textAlign: TextAlign.center,
+                                  controller: _controller,
+                                  decoration: InputDecoration(
+                                    hintText: 'New Name',
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: <Widget>[
+                                    ElevatedButton(
+                                      onPressed: () => context.pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        Uri endpoint = flaskUri(
+                                          '/bookshelf/${widget.shelf.id}',
+                                        );
+                                        final r = await flaskPut(
+                                          endpoint,
+                                          body: {'name': _controller.text},
+                                        );
+                                        if (context.mounted) {
+                                          if (!r.isOk) {
+                                            r.showSnackBar(context);
+                                            return;
+                                          }
+                                          context.pop();
+                                          widget.callback!();
+                                        }
+                                      },
+                                      child: const Text('Rename'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(maxHeight: 20),
+                        icon: const Icon(Icons.close, size: 20),
+                        tooltip: 'delete',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) => ColumnDialog(
+                              children: <Widget>[
+                                Text(
+                                  'Are you sure you want to delete this shelf?',
+                                  style: Theme.of(context).textTheme.titleLarge!
+                                      .copyWith(fontFamily: fontFamilyAlt),
+                                ),
+                                Text(
+                                  'This will remove tag "${widget.shelf.name}" from your books.',
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: <Widget>[
+                                    ElevatedButton(
+                                      onPressed: () => context.pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        Uri endpoint = flaskUri(
+                                          '/bookshelf/${widget.shelf.id}',
+                                        );
+                                        final r = await flaskDelete(endpoint);
+                                        if (context.mounted) {
+                                          if (!r.isOk) {
+                                            r.showSnackBar(context);
+                                            return;
+                                          }
+                                          context.pop();
+                                          widget.callback!();
+                                        }
+                                      },
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                : Container(),
+          ],
+        ),
+      ),
     );
   }
 }
