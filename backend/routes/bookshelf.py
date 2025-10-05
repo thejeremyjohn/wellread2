@@ -63,6 +63,7 @@ def bookshelf_update(bookshelf_id: int):
     bookshelf = Bookshelf.query.get(bookshelf_id)
     assert bookshelf and bookshelf.user_id == current_user.id, \
         f"bookshelf not found with {bookshelf_id=}, user_id={current_user.id}"
+    assert bookshelf.can_delete, "cannot modify an essential shelf"
 
     (params := request.params).pop('can_delete', None)  # disallow setting can_delete
     for key, value in params.items():
@@ -102,6 +103,7 @@ def bookshelf_delete(bookshelf_id: int):
     bookshelf = Bookshelf.query.get(bookshelf_id)
     assert bookshelf and bookshelf.user_id == current_user.id, \
         f"bookshelf not found with {bookshelf_id=}, user_id={current_user.id}"
+    assert bookshelf.can_delete, "cannot delete an essential shelf"
 
     db.session.delete(bookshelf)
     db.session.commit()
