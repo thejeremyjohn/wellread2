@@ -491,6 +491,21 @@ class _ShelfRowState extends State<ShelfRow> {
                         icon: const Icon(Icons.edit, size: 20),
                         tooltip: 'rename',
                         onPressed: () {
+                          void rename() async {
+                            final r = await flaskPut(
+                              flaskUri('/bookshelf/${widget.shelf.id}'),
+                              body: {'name': _controller.text},
+                            );
+                            if (context.mounted) {
+                              if (!r.isOk) {
+                                r.showSnackBar(context);
+                                return;
+                              }
+                              context.pop();
+                              widget.callback!();
+                            }
+                          }
+
                           showDialog(
                             context: context,
                             builder: (BuildContext context) => ColumnDialog(
@@ -506,6 +521,7 @@ class _ShelfRowState extends State<ShelfRow> {
                                   decoration: InputDecoration(
                                     hintText: 'New Name',
                                   ),
+                                  onFieldSubmitted: (_) => rename(),
                                 ),
                                 Row(
                                   mainAxisAlignment:
@@ -516,23 +532,7 @@ class _ShelfRowState extends State<ShelfRow> {
                                       child: const Text('Cancel'),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () async {
-                                        Uri endpoint = flaskUri(
-                                          '/bookshelf/${widget.shelf.id}',
-                                        );
-                                        final r = await flaskPut(
-                                          endpoint,
-                                          body: {'name': _controller.text},
-                                        );
-                                        if (context.mounted) {
-                                          if (!r.isOk) {
-                                            r.showSnackBar(context);
-                                            return;
-                                          }
-                                          context.pop();
-                                          widget.callback!();
-                                        }
-                                      },
+                                      onPressed: rename,
                                       child: const Text('Rename'),
                                     ),
                                   ],
@@ -548,6 +548,21 @@ class _ShelfRowState extends State<ShelfRow> {
                         icon: const Icon(Icons.close, size: 20),
                         tooltip: 'delete',
                         onPressed: () {
+                          void delete() async {
+                            Uri endpoint = flaskUri(
+                              '/bookshelf/${widget.shelf.id}',
+                            );
+                            final r = await flaskDelete(endpoint);
+                            if (context.mounted) {
+                              if (!r.isOk) {
+                                r.showSnackBar(context);
+                                return;
+                              }
+                              context.pop();
+                              widget.callback!();
+                            }
+                          }
+
                           showDialog(
                             context: context,
                             builder: (BuildContext context) => ColumnDialog(
@@ -569,20 +584,7 @@ class _ShelfRowState extends State<ShelfRow> {
                                       child: const Text('Cancel'),
                                     ),
                                     ElevatedButton(
-                                      onPressed: () async {
-                                        Uri endpoint = flaskUri(
-                                          '/bookshelf/${widget.shelf.id}',
-                                        );
-                                        final r = await flaskDelete(endpoint);
-                                        if (context.mounted) {
-                                          if (!r.isOk) {
-                                            r.showSnackBar(context);
-                                            return;
-                                          }
-                                          context.pop();
-                                          widget.callback!();
-                                        }
-                                      },
+                                      onPressed: delete,
                                       child: const Text('Delete'),
                                     ),
                                   ],
