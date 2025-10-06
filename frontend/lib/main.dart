@@ -14,6 +14,7 @@ import 'package:wellread2frontend/pages/signup_page.dart';
 import 'package:wellread2frontend/pages/forgot_pw_page.dart';
 import 'package:wellread2frontend/pages/verify_page.dart';
 import 'package:wellread2frontend/providers/book_page_state.dart';
+import 'package:wellread2frontend/providers/theme_state.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/wellread_app_bar.dart';
 
@@ -24,6 +25,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (context) => ThemeState()),
         ChangeNotifierProvider(create: (context) => UserState()),
         ChangeNotifierProvider(create: (context) => BookPageState()),
       ],
@@ -129,32 +131,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        fontFamily: fontFamily,
-        pageTransitionsTheme: PageTransitionsTheme(
-          builders: {
-            for (final platform in TargetPlatform.values)
-              platform: const NoTransitionsBuilder(),
-          },
-        ),
-      ),
+      theme: context.watch<ThemeState>().theme,
       routerConfig: goRouter,
     );
-  }
-}
-
-class NoTransitionsBuilder extends PageTransitionsBuilder {
-  const NoTransitionsBuilder();
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T>? route,
-    BuildContext? context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget? child,
-  ) {
-    return child!;
   }
 }
