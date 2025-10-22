@@ -40,25 +40,21 @@ class SearchBooksBar extends StatelessWidget {
             trailing: const <Widget>[Icon(Icons.search)],
           );
         },
-        suggestionsBuilder:
-            (BuildContext context, SearchController controller) {
-              if (controller.text.isEmpty) return Future.value([]);
-              return booksGet(controller.text).then(
+        suggestionsBuilder: (context, controller) => controller.text.isEmpty
+            ? Future.value([])
+            : booksGet(controller.text).then(
                 (books) => books.map<ListTile>(
                   (book) => ListTile(
                     leading: book.coverThumb,
                     title: Text(book.title),
                     subtitle: Text(book.author),
                     onTap: () {
-                      controller
-                        ..clear()
-                        ..closeView(null);
+                      controller.closeView('');
                       context.go('/book/${book.id}');
                     },
                   ),
                 ),
-              );
-            },
+              ),
       ),
     );
   }
