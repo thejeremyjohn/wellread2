@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:wellread2frontend/constants.dart';
 import 'package:wellread2frontend/flask_util/login_logout.dart';
 import 'package:wellread2frontend/providers/theme_state.dart';
 import 'package:wellread2frontend/providers/user_state.dart';
 import 'package:wellread2frontend/widgets/search_books_bar.dart';
 
 class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const WellreadAppBar({super.key});
+  const WellreadAppBar({super.key, this.isLoggedIn = true});
+  final bool isLoggedIn;
 
   // width doesnt matter
   @override
@@ -33,43 +35,48 @@ class WellreadAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.book),
-                tooltip: 'My Books',
-                onPressed: () {
-                  final userId = context.read<UserState>().user.id;
-                  context.go('/books?userId=$userId');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.shopping_cart),
-                tooltip: 'Browse',
-                onPressed: () => context.go('/books'),
-              ),
-              IconButton(
-                icon: const Icon(Icons.person),
-                tooltip: 'Profile',
-                onPressed: () {
-                  final userId = context.read<UserState>().user.id;
-                  context.go('/profile/$userId');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                tooltip: 'Logout',
-                onPressed: () => logout(),
-              ),
-            ],
-          ),
+          isLoggedIn
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.book),
+                      tooltip: 'My Books',
+                      onPressed: () {
+                        final userId = context.read<UserState>().user.id;
+                        context.go('/books?userId=$userId');
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.shopping_cart),
+                      tooltip: 'Browse',
+                      onPressed: () => context.go('/books'),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.person),
+                      tooltip: 'Profile',
+                      onPressed: () {
+                        final userId = context.read<UserState>().user.id;
+                        context.go('/profile/$userId');
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.logout),
+                      tooltip: 'Logout',
+                      onPressed: () => logout(),
+                    ),
+                  ],
+                )
+              : Container(),
           Container(),
         ],
       ),
+      actionsPadding: EdgeInsets.symmetric(horizontal: kPadding * 0.5),
       actions: [
-        SizedBox(width: 150, child: SearchBooksBar()),
+        isLoggedIn
+            ? SizedBox(width: 150, child: SearchBooksBar())
+            : Container(),
         Consumer<ThemeState>(
           builder: (context, theme, child) {
             return IconButton(

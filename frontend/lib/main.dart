@@ -51,35 +51,47 @@ class _MyAppState extends State<MyApp> {
       initialLocation: initialLocation,
       routes: [
         GoRoute(path: '/', redirect: (_, __) => initialLocation),
-        GoRoute(
-          path: '/login',
-          redirect: (_, __) async =>
-              await isLoggedIn(context) ? initialLocation : null,
-          builder: (context, state) => SelectionArea(child: const LoginPage()),
-        ),
-        GoRoute(
-          path: '/forgotpw',
-          builder: (context, state) => SelectionArea(
-            child: ForgotPwPage(
-              email: (state.extra as Map?)?['email'],
-              token: state.uri.queryParameters['token'],
+
+        // not-logged-in routes
+        ShellRoute(
+          navigatorKey: kShellNavKeyNotLoggedIn,
+          builder: (context, state, child) => SelectionArea(
+            child: Scaffold(
+              appBar: WellreadAppBar(isLoggedIn: false),
+              body: child,
             ),
           ),
+          routes: <RouteBase>[
+            GoRoute(
+              path: '/login',
+              redirect: (_, __) async =>
+                  await isLoggedIn(context) ? initialLocation : null,
+              builder: (context, state) => const LoginPage(),
+            ),
+            GoRoute(
+              path: '/forgotpw',
+              builder: (context, state) => ForgotPwPage(
+                email: (state.extra as Map?)?['email'],
+                token: state.uri.queryParameters['token'],
+              ),
+            ),
+            GoRoute(
+              path: '/signup',
+              redirect: (_, __) async =>
+                  await isLoggedIn(context) ? initialLocation : null,
+              builder: (context, state) => const SignupPage(),
+            ),
+            GoRoute(
+              path: '/verify',
+              redirect: (_, __) async =>
+                  await isLoggedIn(context) ? initialLocation : null,
+              builder: (context, state) =>
+                  VerifyPage(token: state.uri.queryParameters['token']),
+            ),
+          ],
         ),
-        GoRoute(
-          path: '/signup',
-          redirect: (_, __) async =>
-              await isLoggedIn(context) ? initialLocation : null,
-          builder: (context, state) => SelectionArea(child: const SignupPage()),
-        ),
-        GoRoute(
-          path: '/verify',
-          redirect: (_, __) async =>
-              await isLoggedIn(context) ? initialLocation : null,
-          builder: (context, state) => SelectionArea(
-            child: VerifyPage(token: state.uri.queryParameters['token']),
-          ),
-        ),
+
+        // logged-in routes
         ShellRoute(
           navigatorKey: kShellNavKey,
           builder: (context, state, child) => SelectionArea(

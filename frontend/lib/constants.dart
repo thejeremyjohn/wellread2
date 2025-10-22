@@ -4,6 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 final GlobalKey<NavigatorState> kRootNavKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
 );
+final GlobalKey<NavigatorState> kShellNavKeyNotLoggedIn =
+    GlobalKey<NavigatorState>(debugLabel: 'shellNotLoggedIn');
 final GlobalKey<NavigatorState> kShellNavKey = GlobalKey<NavigatorState>(
   debugLabel: 'shell',
 );
