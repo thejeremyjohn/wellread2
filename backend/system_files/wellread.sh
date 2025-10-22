@@ -8,6 +8,8 @@ cd /home/ubuntu/wellread2
 /home/ubuntu/miniconda3/envs/wellread/bin/python -m gunicorn backend.app:app \
 	--bind 0.0.0.0:5000 \
 	--timeout 3000 \
-	--workers $(nproc --all | awk '{print $1*2+1}') \
+	--workers 2 \
 	--log-file "-" \
 	--access-logfile "-"
+
+# --workers $(nproc --all | awk '{print $1*2+1}') \

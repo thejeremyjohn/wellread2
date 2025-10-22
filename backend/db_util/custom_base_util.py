@@ -128,7 +128,6 @@ def singular_camel_classname(base, tablename, table):
                    for w in tablename.title().split('_'))
 
 
-# TODO test on long underscored string
 def plural_snakecase_collection(base, local_cls, referred_cls, constraint):
     ''' (classname) Review -> (collectionname) reviews '''
     return inflection.plural(re.sub(
