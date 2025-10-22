@@ -164,7 +164,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: <Widget>[
                       CircleAvatar(
                         radius: 75,
-                        backgroundColor: kGreen,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).appBarTheme.backgroundColor,
                         child: Icon(Icons.person, size: 100),
                       ),
                       SizedBox(

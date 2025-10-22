@@ -55,7 +55,13 @@ class _BookPageState extends State<BookPage> {
       builder: (context, _) => SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          style: ButtonStyle(backgroundColor: WidgetStateProperty.all(kGreen)),
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(
+              context.select((BookPageState b) => b.book.myShelf != null)
+                  ? kGreen
+                  : null,
+            ),
+          ),
           onPressed: () => showDialog<String>(
             context: context,
             builder: (BuildContext context) => AsyncConsumer<BookPageState>(
@@ -422,7 +428,9 @@ class ReviewWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundColor: kBrown,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).appBarTheme.backgroundColor,
                   child: Icon(Icons.person),
                 ),
                 Text(review.user!.fullName),
