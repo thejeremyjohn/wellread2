@@ -284,7 +284,10 @@ class _BooksPageState extends State<BooksPage> {
                               userId: widget.userId ?? meId,
                             ),
                           ),
-                          Divider(height: kPadding),
+                          SizedBox(
+                            width: 150,
+                            child: Divider(height: kPadding),
+                          ),
                           ...tags.map(
                             (tag) => ShelfRow(
                               shelf: tag,
